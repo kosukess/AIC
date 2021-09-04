@@ -1,0 +1,1 @@
+sudo docker stop aic_project_run

@@ -1,0 +1,1 @@
+sudo docker run -it --runtime nvidia -p 8000:8000 -v $PWD:/usr/app --name aic_project_run aic_project:develop
