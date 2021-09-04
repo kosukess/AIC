@@ -17,3 +17,5 @@ FROM ${BASE_IMAGE}
 
 RUN apt-get install python3-matplotlib
 RUN python3 -m pip install tqdm cython pycocotools traitlets
+
+WORKDIR /root
