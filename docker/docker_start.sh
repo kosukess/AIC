@@ -1,1 +1,1 @@
-sudo docker start aic_project_run --runtime nvidia
+sudo docker start aic_project_run

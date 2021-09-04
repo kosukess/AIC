@@ -1,0 +1,1 @@
+sudo docker attach aic_project_run

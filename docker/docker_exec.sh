@@ -1,1 +1,0 @@
-sudo docker exec -it aic_project_run /bin/bash
