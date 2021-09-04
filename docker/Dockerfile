@@ -14,3 +14,6 @@
 # JupyterLab 2.2.9
 ARG BASE_IMAGE=nvcr.io/nvidia/l4t-ml:r32.6.1-py3
 FROM ${BASE_IMAGE}
+
+RUN apt-get install python3-matplotlib
+RUN python3 -m pip install tqdm cython pycocotools traitlets
