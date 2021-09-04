@@ -1,4 +1,3 @@
 .local
 .python_history
 torch2trt
-trt_pose_hand_jupyter
