@@ -1,2 +1,6 @@
 .local
 .python_history
+.bash_history
+torch2trt
+trt_pose
+trt_pose_hand
