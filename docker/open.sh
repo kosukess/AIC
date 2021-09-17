@@ -1,2 +1,2 @@
-sudo docker start aic_project_run
-sudo docker attach aic_project_run
+PATH_DIR_PARENT="$(dirname "$(cd "$(dirname "${BASH_SOURCE:-$0}")" && pwd)")"
+sudo docker run -it --rm --runtime nvidia --network host -v "$PATH_DIR_PARENT":/root --name aic_project_run aic_project:ver.1.0
