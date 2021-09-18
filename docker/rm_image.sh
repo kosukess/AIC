@@ -1,0 +1,1 @@
+sudo docker rmi aic_project:ver.1.0

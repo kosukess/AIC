@@ -13,3 +13,7 @@ cd trt_pose
 python3 setup.py install
 
 cd ~
+
+git clone https://github.com/NVIDIA-AI-IOT/jetcam.git
+cd jetcam
+python3 setup.py install

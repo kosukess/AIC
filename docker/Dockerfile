@@ -17,5 +17,10 @@ FROM ${BASE_IMAGE}
 
 RUN apt-get install python3-matplotlib
 RUN python3 -m pip install tqdm cython pycocotools traitlets
+RUN apt-get update
+RUN apt-get -y install python3-tk
+RUN apt-get update
+RUN apt-get upgrade
+RUN apt-get install nodejs
 
 WORKDIR /root
