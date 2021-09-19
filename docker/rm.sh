@@ -1,1 +1,1 @@
-sudo docker rm aic_project_run
+sudo docker container prune

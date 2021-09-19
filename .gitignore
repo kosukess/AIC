@@ -1,5 +1,4 @@
 .*
-torch2trt
-trt_pose
-trt_pose_hand
-jetcam
+src
+dist
+build
