@@ -4,7 +4,7 @@
 ```bash
 $ git clone https://github.com/kosukess/AIC.git
 $ cd AIC
-$ sh docker/create_image_and_run.sh
+$ sh docker/create_container.sh
 
 # open docker container
 
