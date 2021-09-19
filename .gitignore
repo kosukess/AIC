@@ -2,4 +2,4 @@
 src
 dist
 build
-project/model/hand_pose_resnet18_att_244_244_trt.pth
+find . -size +100M | sed -e 's/^\.\///' >> .gitignore
