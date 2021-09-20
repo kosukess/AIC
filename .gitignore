@@ -1,5 +1,5 @@
 .*
 src
 dist
-build
-find . -size +100M | sed -e 's/^\.\///' >> .gitignore
+buildproject/model/hand_pose_resnet18_att_244_244_trt.pth
+project/model/hand_pose_resnet18_att_244_244_trt.pth
