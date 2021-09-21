@@ -2,6 +2,7 @@
 
 ## 環境構築
 ### install
+jetpack 4.5.1 for 2GB
 カメラをつけてから行う.
 ```bash
 $ git clone https://github.com/kosukess/AIC.git
