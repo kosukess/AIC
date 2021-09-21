@@ -2,6 +2,7 @@
 
 ## 環境構築
 ### install
+カメラをつけてから行う.
 ```bash
 $ git clone https://github.com/kosukess/AIC.git
 $ cd AIC
