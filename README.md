@@ -5,7 +5,8 @@
 ```bash
 $ git clone https://github.com/kosukess/AIC.git
 $ cd AIC
-$ sh docker/create_container.sh
+$ sh docker/build.sh
+$ sh docker/run.sh
 
 # open docker container
 
