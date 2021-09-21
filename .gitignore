@@ -1,6 +1,6 @@
 .*
-src
 dist
+build
 buildproject/model/hand_pose_resnet18_att_244_244_trt.pth
 project/model/hand_pose_resnet18_att_244_244_trt.pth
 *__pycache__*
