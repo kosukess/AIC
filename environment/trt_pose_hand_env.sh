@@ -3,6 +3,9 @@ apt-get -y install python3-tk
 apt-get upgrade -y
 python3 -m pip install setuptools tqdm cython pycocotools traitlets
 
+pip3 uninstall scikit-learn -y
+pip3 install scikit-learn==0.23.2 -y
+
 mkdir /script
 cd /script
 
