@@ -27,13 +27,9 @@ from jetcam.utils import bgr8_to_jpeg
 
 
 
-
-
-
-
 class project:
-    def __init__(self):
-
+    def __init__(self, h=224, w=224):
+        
         with open('preprocess/hand_pose.json', 'r') as f:
             hand_pose = json.load(f)
 
@@ -47,6 +43,10 @@ class project:
 
         WIDTH = 224
         HEIGHT = 224
+        self.rectangle = []
+        self.h = h
+        self.w = w
+        self.white_board = np.full([self.h, self.w, 3], 255, np.uint8)
         data = torch.zeros((1, 3, HEIGHT, WIDTH)).cuda()
 
         if not os.path.exists('model/hand_pose_resnet18_att_244_244_trt.pth'):
@@ -65,9 +65,9 @@ class project:
         self.parse_objects = ParseObjects(topology,cmap_threshold=0.12, link_threshold=0.15)
         draw_objects = DrawObjects(topology)
 
-        mean = torch.Tensor([0.485, 0.456, 0.406]).cuda()
-        std = torch.Tensor([0.229, 0.224, 0.225]).cuda()
-        device = torch.device('cuda')
+        self.mean = torch.Tensor([0.485, 0.456, 0.406]).cuda()
+        self.std = torch.Tensor([0.229, 0.224, 0.225]).cuda()
+        self.device = torch.device('cuda')
 
         self.clf = make_pipeline(StandardScaler(), SVC(gamma='auto', kernel='rbf'))
         
@@ -87,21 +87,22 @@ class project:
         self.gesture_type = gesture["classes"]
 
 
-        camera = USBCamera(width=WIDTH, height=HEIGHT, capture_fps=30, capture_device=0)
+        self.camera = USBCamera(width=WIDTH, height=HEIGHT, capture_fps=30, capture_device=0)
         #camera = CSICamera(width=WIDTH, height=HEIGHT, capture_fps=30)
 
-        camera.running = True
+        self.camera.running = True
 
-    def preprocess(image):
-        global device
-        device = torch.device('cuda')
+
+
+    def preprocess(self, image):
+        self.device = torch.device('cuda')
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         image = PIL.Image.fromarray(image)
-        image = transforms.functional.to_tensor(image).to(device)
-        image.sub_(mean[:, None, None]).div_(std[:, None, None])
+        image = transforms.functional.to_tensor(image).to(self.device)
+        image.sub_(self.mean[:, None, None]).div_(self.std[:, None, None])
         return image[None, ...]
     
-    def draw_joints(image, joints):
+    def draw_joints(self, image, joints):
         count = 0
         for i in joints:
             if i==[0,0]:
@@ -129,7 +130,7 @@ class project:
         return hand_pose_image, gesture
 
 
-    def hand_pose(image):
+    def hand_pose(self, image):
         data = self.preprocess(image)
         cmap, paf = self.model_trt(data)
         cmap, paf = cmap.detach().cpu(), paf.detach().cpu()
@@ -142,3 +143,53 @@ class project:
 
     def gesture_class(self):
         return self.preprocessdata.text
+
+    def draw(self, image, joints, func_n = 0):
+        if func_n == 0:
+            if self.preprocessdata.text=="line":
+                if joints[5]!=[0,0]:
+                    self.rectangle.append((int(joints[6][0]*(self.h/224)), int(joints[6][1])*(self.w/244)))
+
+            if (len(rectangle)) > 0:
+                if self.rectangle[-1]!=[0,0]:
+                    cv2.line(image,self.rectangle[-2], self.rectangle[-1], (0,0,0), 2)
+        if func_n == 1:
+            if self.preprocessdata.text=="line":
+                if joints[5]!=[0,0]:
+                    self.rectangle.append((int(joints[6][0]*(self.h/224)), int(joints[6][1])*(self.w/244)))
+
+            if (len(rectangle)) > 0:
+                if rectangle[-1]!=[0,0]:
+                    cv2.line(image, self.rectangle[-2]*, self.rectangle[-1], (255,255,255), 5)
+
+    def execute(self):
+        image = change['new']
+        data = self.preprocess(image)
+        cmap, paf = self.model_trt(data)
+        cmap, paf = cmap.detach().cpu(), paf.detach().cpu()
+        counts, objects, peaks = self.parse_objects(cmap, paf)
+        joints = self.preprocessdata.joints_inference(image, counts, objects, peaks)
+        #draw_objects(image, counts, objects, peaks )
+        draw_joints(image, joints)
+        dist_bn_joints = self.preprocessdata.find_distance(joints)
+        gesture = clf.predict([dist_bn_joints,[0]*self.num_parts*self.num_parts])
+        gesture_joints = gesture[0]
+        self.preprocessdata.prev_queue.append(gesture_joints)
+        self.preprocessdata.prev_queue.pop(0)
+        self.preprocessdata.print_label(image, self.preprocessdata.prev_queue, self.gesture_type)
+        draw(image, joints)
+        draw(self.white_board, joints)
+        cv2.imshow('white board', self.white_board)
+        cv2.waitKey(1)
+        #image = image[:, ::-1, :]
+        image_w.value = bgr8_to_jpeg(image)
+        
+
+    
+    def start(self):
+        self.camera.observe(execute, names='value')
+
+    def end(self):
+        self.camera.unobserve_all()
+        #camera.running = False
+
