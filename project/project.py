@@ -48,6 +48,14 @@ class project:
         self.w = w
         self.draw_or_not = 1
         self.white_board = np.full([self.h, self.w, 3], 255, np.uint8)
+        self.botton_board = np.full(size, 255, np.uint8)
+        self.botton_board[0:int(h/2), 0:int(w/3)]=0
+        self.botton_board[0:int(h/2), int(w/3):int(2*w/3)]=40
+        self.botton_board[0:int(h/2), int(2*w/3):w]=80
+        self.botton_board[int(h/2):h, 0:int(w/3)]=120
+        self.botton_board[int(h/2):h, int(w/3):int(2*w/3)]=160
+        self.botton_board[int(h/2):h, int(2*w/3):w]=200
+
         data = torch.zeros((1, 3, HEIGHT, WIDTH)).cuda()
 
         if not os.path.exists('model/hand_pose_resnet18_att_244_244_trt.pth'):
@@ -163,10 +171,10 @@ class project:
                 if rectangle[-1]!=[0,0]:
                     cv2.line(image, self.rectangle[-2]*, self.rectangle[-1], (255,255,255), 5)
 
-    def switch(self, img, current_gesture):
+    def switch(self, current_gesture):
         if (current_gesture == "clear")and(self.pre_gesture == "click"):
             x_position, y_position = int(joints[8][0]*(self.w/224)), int(joint[8][1]*(self.h/224))
-            color = img[x_position, y_positon]
+            color = self.botton_board[x_position, y_positon]
             if color == 0:
                 self.draw_or_not = self.draw_or_not*-1
         self.pre_gesture = current_gesture
@@ -174,7 +182,7 @@ class project:
     def execute(self):
         image = change['new']
         image, current_gesture = self.classify_gesture(image)
-        switch(sugihara, current_gesture)
+        switch(current_gesture)
         self.pre_gesture
         draw(self.white_board, joints)
         cv2.imshow('white board', self.white_board)
