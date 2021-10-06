@@ -46,6 +46,7 @@ class project:
         self.rectangle = []
         self.h = h
         self.w = w
+        self.draw_or_not = 1
         self.white_board = np.full([self.h, self.w, 3], 255, np.uint8)
         data = torch.zeros((1, 3, HEIGHT, WIDTH)).cuda()
 
@@ -144,48 +145,43 @@ class project:
     def gesture_class(self):
         return self.preprocessdata.text
 
-    def draw(self, image, joints, func_n = 0):
-        if func_n == 0:
+    def draw(self, image, joints):
+        if self.draw_or_not == -1:
             if self.preprocessdata.text=="line":
                 if joints[5]!=[0,0]:
-                    self.rectangle.append((int(joints[6][0]*(self.h/224)), int(joints[6][1])*(self.w/244)))
+                    self.rectangle.append((int(joints[8][0]*(self.w/224)), int(joints[8][1])*(self.h/244)))
 
             if (len(rectangle)) > 0:
                 if self.rectangle[-1]!=[0,0]:
                     cv2.line(image,self.rectangle[-2], self.rectangle[-1], (0,0,0), 2)
-        if func_n == 1:
+        if self.draw_or_not == 1:
             if self.preprocessdata.text=="line":
                 if joints[5]!=[0,0]:
-                    self.rectangle.append((int(joints[6][0]*(self.h/224)), int(joints[6][1])*(self.w/244)))
+                    self.rectangle.append((int(joints[8[0]*(self.w/224)), int(joints[8][1])*(self.h/244)))
 
             if (len(rectangle)) > 0:
                 if rectangle[-1]!=[0,0]:
                     cv2.line(image, self.rectangle[-2]*, self.rectangle[-1], (255,255,255), 5)
 
+    def switch(self, img, current_gesture):
+        if (current_gesture == "clear")and(self.pre_gesture == "click"):
+            x_position, y_position = int(joints[8][0]*(self.w/224)), int(joint[8][1]*(self.h/224))
+            color = img[x_position, y_positon]
+            if color == 0:
+                self.draw_or_not = self.draw_or_not*-1
+        self.pre_gesture = current_gesture
+
     def execute(self):
         image = change['new']
-        data = self.preprocess(image)
-        cmap, paf = self.model_trt(data)
-        cmap, paf = cmap.detach().cpu(), paf.detach().cpu()
-        counts, objects, peaks = self.parse_objects(cmap, paf)
-        joints = self.preprocessdata.joints_inference(image, counts, objects, peaks)
-        #draw_objects(image, counts, objects, peaks )
-        draw_joints(image, joints)
-        dist_bn_joints = self.preprocessdata.find_distance(joints)
-        gesture = clf.predict([dist_bn_joints,[0]*self.num_parts*self.num_parts])
-        gesture_joints = gesture[0]
-        self.preprocessdata.prev_queue.append(gesture_joints)
-        self.preprocessdata.prev_queue.pop(0)
-        self.preprocessdata.print_label(image, self.preprocessdata.prev_queue, self.gesture_type)
-        draw(image, joints)
+        image, current_gesture = self.classify_gesture(image)
+        switch(sugihara, current_gesture)
+        self.pre_gesture
         draw(self.white_board, joints)
         cv2.imshow('white board', self.white_board)
-        cv2.waitKey(1)
         #image = image[:, ::-1, :]
-        image_w.value = bgr8_to_jpeg(image)
+        cv2.imshow('screen', image)
+        cv2.waitKey(1)
         
-
-    
     def start(self):
         self.camera.observe(execute, names='value')
 
