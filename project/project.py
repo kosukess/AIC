@@ -82,14 +82,8 @@ class project:
         
         self.preprocessdata = preprocessdata(topology, self.num_parts)
 
-        svm_train = False
-        if svm_train:
-            self.clf, predicted = self.preprocessdata.trainsvm(self.clf, joints_train, joints_test, hand.labels_train, hand.labels_test)
-            filename = 'svmmodel.sav'
-            pickle.dump(self.clf, open(filename, 'wb'))
-        else:
-            filename = 'svmmodel.sav'
-            self.clf = pickle.load(open(filename, 'rb'))
+        filename = 'svmmodel.sav'
+        self.clf = pickle.load(open(filename, 'rb'))
         
         with open('preprocess/gesture.json', 'r') as f:
             gesture = json.load(f)
