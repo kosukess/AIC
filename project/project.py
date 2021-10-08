@@ -30,12 +30,12 @@ class project:
     def __init__(self, h=224, w=224):
         
         with open('preprocess/hand_pose.json', 'r') as f:
-            hand_pose = json.load(f)
+            self.hand_pose = json.load(f)
 
-        topology = trt_pose.coco.coco_category_to_topology(hand_pose)
+        topology = trt_pose.coco.coco_category_to_topology(self.hand_pose)
         
-        self.num_parts = len(hand_pose['keypoints'])
-        num_links = len(hand_pose['skeleton'])
+        self.num_parts = len(self.hand_pose['keypoints'])
+        num_links = len(self.hand_pose['skeleton'])
 
         model = trt_pose.models.resnet18_baseline_att(self.num_parts, 2 * num_links).cuda().eval()
         
@@ -79,7 +79,7 @@ class project:
 
         self.clf = make_pipeline(StandardScaler(), SVC(gamma='auto', kernel='rbf'))
         
-        self.preprocessdata = preprocessdata(topology, num_parts)
+        self.preprocessdata = preprocessdata(topology, self.num_parts)
 
         svm_train = False
         if svm_train:
@@ -100,6 +100,9 @@ class project:
 
         self.camera.running = True
 
+        # hand tracking
+        self.current_hand_position = None
+
 
 
     def preprocess(self, image):
@@ -110,6 +113,7 @@ class project:
         image.sub_(self.mean[:, None, None]).div_(self.std[:, None, None])
         return image[None, ...]
     
+
     def draw_joints(self, image, joints):
         count = 0
         for i in joints:
@@ -120,14 +124,13 @@ class project:
         for i in joints:
             cv2.circle(image, (i[0],i[1]), 2, (0,0,255), 1)
         cv2.circle(image, (joints[0][0],joints[0][1]), 2, (255,0,255), 1)
-        for i in hand_pose['skeleton']:
+        for i in self.hand_pose['skeleton']:
             if joints[i[0]-1][0]==0 or joints[i[1]-1][0] == 0:
                 break
             cv2.line(image, (joints[i[0]-1][0],joints[i[0]-1][1]), (joints[i[1]-1][0],joints[i[1]-1][1]), (0,255,0), 1)
 
 
-    def classify_gesture(self, image):
-        hand_pose_image, hand_pose_joints = self.hand_pose(image)
+    def classify_gesture(self, hand_pose_image, hand_pose_joints):
         dist_bn_joints = self.preprocessdata.find_distance(hand_pose_joints)
         gesture = self.clf.predict([dist_bn_joints,[0]*self.num_parts*self.num_parts])
         gesture_joints = gesture[0]
@@ -152,45 +155,48 @@ class project:
     def gesture_class(self):
         return self.preprocessdata.text
 
+
     def draw(self, image, joints):
         if self.draw_or_not == -1:
             if self.preprocessdata.text=="line":
                 if joints[5]!=[0,0]:
-                    self.rectangle.append((int(joints[8][0]*(self.w/224)), int(joints[8][1])*(self.h/244)))
+                    self.rectangle.append([int(joints[8][0]*(self.w/224)), int(joints[8][1])*(self.h/244)])
 
-            if (len(rectangle)) > 0:
+            if (len(self.rectangle)) > 0:
                 if self.rectangle[-1]!=[0,0]:
                     cv2.line(image,self.rectangle[-2], self.rectangle[-1], (0,0,0), 2)
         if self.draw_or_not == 1:
             if self.preprocessdata.text=="line":
                 if joints[5]!=[0,0]:
-                    self.rectangle.append((int(joints[8[0]*(self.w/224)), int(joints[8][1])*(self.h/244)))
+                    self.rectangle.append([int(joints[8][0]*(self.w/224)), int(joints[8][1])*(self.h/244)])
 
-            if (len(rectangle)) > 0:
-                if rectangle[-1]!=[0,0]:
-                    cv2.line(image, self.rectangle[-2]*, self.rectangle[-1], (255,255,255), 5)
+            if len(self.rectangle) > 0:
+                if self.rectangle[-1]!=[0,0]:
+                    cv2.line(image, self.rectangle[-2], self.rectangle[-1], (255,255,255), 5)
+
 
     def switch(self, current_gesture):
         if (current_gesture == "clear")and(self.pre_gesture == "click"):
-            x_position, y_position = int(joints[8][0]*(self.w/224)), int(joint[8][1]*(self.h/224))
-            color = self.botton_board[x_position, y_positon]
+            x_position, y_position = int(self.joints[8][0]*(self.w/224)), int(self.joint[8][1]*(self.h/224))
+            color = self.botton_board[x_position, y_position]
             if color == 0:
                 self.draw_or_not = self.draw_or_not*-1
         self.pre_gesture = current_gesture
 
-    def execute(self):
+    def execute(self, change):
         image = change['new']
+        hand_pose_image, hand_pose_joints = self.hand_pose(image)
         image, current_gesture = self.classify_gesture(image)
-        switch(current_gesture)
+        self.switch(current_gesture)
         self.pre_gesture
-        draw(self.white_board, joints)
+        self.draw(self.white_board, self.joints)
         cv2.imshow('white board', self.white_board)
         #image = image[:, ::-1, :]
         cv2.imshow('screen', image)
         cv2.waitKey(1)
         
     def start(self):
-        self.camera.observe(execute, names='value')
+        self.camera.observe(self.execute, names='value')
 
     def end(self):
         self.camera.unobserve_all()
