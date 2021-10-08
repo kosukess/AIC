@@ -24,6 +24,7 @@ from sklearn.svm import SVC
 from jetcam.usb_camera import USBCamera
 from jetcam.csi_camera import CSICamera
 from jetcam.utils import bgr8_to_jpeg
+from frame import Frame
 
 
 class project:
@@ -101,8 +102,21 @@ class project:
         self.camera.running = True
 
         # hand tracking
-        self.current_hand_position = None
+        self.pre_frame = None
+        self.cursor_joint = 8
+        self.dif_threshold = 15
+        self.abs_dif_threshold = self.dif_threshold * np.sqrt(2)
 
+        # params for ShiTomasi corner detection
+        self.feature_params = dict( maxCorners = 100,
+                            qualityLevel = 0.3,
+                            minDistance = 7,
+                            blockSize = 7 )
+
+        # Parameters for lucas kanade optical flow
+        self.lk_params = dict( winSize  = (15,15),
+                        maxLevel = 2,
+                        criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
 
 
     def preprocess(self, image):
@@ -137,7 +151,6 @@ class project:
         self.preprocessdata.prev_queue.append(gesture_joints)
         self.preprocessdata.prev_queue.pop(0)
         gesture = self.gesture_class()
-        
         return hand_pose_image, gesture
 
 
@@ -148,7 +161,6 @@ class project:
         counts, objects, peaks = self.parse_objects(cmap, paf)
         joints = self.preprocessdata.joints_inference(image, counts, objects, peaks)
         self.draw_joints(image, joints)
-
         return image, joints
 
 
@@ -156,11 +168,15 @@ class project:
         return self.preprocessdata.text
 
 
+    def calcAbs(self, difvec):
+        return np.sqrt(difvec[0]**2+difvec[1]**2)
+
+
     def draw(self, image, joints):
         if self.draw_or_not == -1:
             if self.preprocessdata.text=="line":
                 if joints[5]!=[0,0]:
-                    self.rectangle.append([int(joints[8][0]*(self.w/224)), int(joints[8][1])*(self.h/244)])
+                    self.rectangle.append([int(joints[self.cursor_joint][0]*(self.w/224)), int(joints[self.cursor_joint][1])*(self.h/244)])
 
             if (len(self.rectangle)) > 0:
                 if self.rectangle[-1]!=[0,0]:
@@ -168,35 +184,62 @@ class project:
         if self.draw_or_not == 1:
             if self.preprocessdata.text=="line":
                 if joints[5]!=[0,0]:
-                    self.rectangle.append([int(joints[8][0]*(self.w/224)), int(joints[8][1])*(self.h/244)])
+                    self.rectangle.append([int(joints[self.cursor_joint][0]*(self.w/224)), int(joints[self.cursor_joint][1])*(self.h/244)])
 
             if len(self.rectangle) > 0:
                 if self.rectangle[-1]!=[0,0]:
                     cv2.line(image, self.rectangle[-2], self.rectangle[-1], (255,255,255), 5)
 
 
-    def switch(self, current_gesture):
-        if (current_gesture == "clear")and(self.pre_gesture == "click"):
-            x_position, y_position = int(self.joints[8][0]*(self.w/224)), int(self.joint[8][1]*(self.h/224))
+    def kltTracker(self, current_frame, pre_frame):
+        p1, st, err = cv2.calcOpticalFlowPyrLK(pre_frame.img, current_frame.img, [[pre_frame.hand_position]], None, **self.lk_params)
+        return p1[0][0]
+
+
+    def switch(self, current_frame):
+        if (current_frame.gesture == "clear")and(self.pre_frame.gesture == "click"):
+            x_position, y_position = int(self.joints[self.cursor_joint][0]*(self.w/224)), int(self.joint[self.cursor_joint][1]*(self.h/224))
             color = self.botton_board[x_position, y_position]
             if color == 0:
                 self.draw_or_not = self.draw_or_not*-1
-        self.pre_gesture = current_gesture
+
 
     def execute(self, change):
         image = change['new']
+        gray = cv2.cvtColor(image)
         hand_pose_image, hand_pose_joints = self.hand_pose(image)
-        image, current_gesture = self.classify_gesture(image)
+        hand_pose_image, current_gesture = self.classify_gesture(hand_pose_image)
+        current_hand_position = np.array(hand_pose_joints[self.cursor_joint])
+
+        # frameの作成
+        current_frame = Frame(gray, current_hand_position, current_gesture)
+
+        # hand_poseが失敗していたらKLTtracker
+        if self.pre_frame is not None:
+            dif = current_frame.hand_position - self.pre_frame.hand_position
+            abs_dif = self.calcAbs(dif)
+            if abs_dif <= self.abs_dif_threshold:
+                current_hand_position = self.kltTracker(current_frame, self.pre_frame)
+                current_frame.update_hand_position(current_hand_position)
+        
+        # gesture分類
         self.switch(current_gesture)
         self.pre_gesture
         self.draw(self.white_board, self.joints)
+
+        # 表示
         cv2.imshow('white board', self.white_board)
         #image = image[:, ::-1, :]
-        cv2.imshow('screen', image)
+        cv2.imshow('screen', hand_pose_image)
         cv2.waitKey(1)
+
+
+        self.pre_frame = current_frame
         
+
     def start(self):
         self.camera.observe(self.execute, names='value')
+
 
     def end(self):
         self.camera.unobserve_all()
