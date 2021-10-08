@@ -2,7 +2,8 @@
 
 ## 環境構築
 ### install
-カメラをつけてから行う.
+- jetpack 4.5.1 for 2GBを使用する( https://developer.nvidia.com/jetpack-sdk-451-archive ).
+- カメラをつけてから行う.
 ```bash
 $ git clone https://github.com/kosukess/AIC.git
 $ cd AIC
