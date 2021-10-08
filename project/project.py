@@ -26,11 +26,6 @@ from jetcam.csi_camera import CSICamera
 from jetcam.utils import bgr8_to_jpeg
 
 
-
-
-
-
-
 class project:
     def __init__(self):
 
