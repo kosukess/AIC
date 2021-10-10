@@ -27,7 +27,7 @@ from jetcam.utils import bgr8_to_jpeg
 from frame import Frame
 
 
-class project:
+class Project:
     def __init__(self, h=224, w=224):
         
         with open('preprocess/hand_pose.json', 'r') as f:
@@ -225,8 +225,9 @@ class project:
         cv2.imshow('white board', self.white_board)
         #image = image[:, ::-1, :]
         cv2.imshow('screen', hand_pose_image)
-        cv2.waitKey(1)
-
+        key = cv2.waitKey(1)
+        if  key == ord('q'):
+            self.end()
 
         self.pre_frame = current_frame
         
