@@ -159,11 +159,11 @@ class project:
         if self.draw_or_not == 1:
             if self.preprocessdata.text=="line":
                 if joints[5]!=[0,0]:
-                    self.rectangle.append((int(joints[8[0]*(self.w/224)), int(joints[8][1])*(self.h/244)))
+                    self.rectangle.append([int(joints[8][0]*(self.w/224)), int(joints[8][1])*(self.h/244)])
 
             if (len(self.rectangle)) > 0:
                 if self.rectangle[-1]!=[0,0]:
-                    cv2.line(image, self.rectangle[-2]*, self.rectangle[-1], (255,255,255), 5)
+                    cv2.line(image, self.rectangle[-2], self.rectangle[-1], (255,255,255), 5)
 
     def switch(self, current_gesture):
         if (current_gesture == "clear")and(self.pre_gesture == "click"):
