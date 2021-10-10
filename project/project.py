@@ -48,7 +48,7 @@ class project:
         self.w = w
         self.draw_or_not = 1
         self.white_board = np.full([self.h, self.w, 3], 255, np.uint8)
-        self.botton_board = np.full(size, 255, np.uint8)
+        self.botton_board = np.full([self.h, self.w], 255, np.uint8)
         self.botton_board[0:int(h/2), 0:int(w/3)]=0
         self.botton_board[0:int(h/2), int(w/3):int(2*w/3)]=40
         self.botton_board[0:int(h/2), int(2*w/3):w]=80
@@ -237,5 +237,5 @@ class project:
 
     def end(self):
         self.camera.unobserve_all()
-        #camera.running = False
-
+    
+    #camera.running = False
