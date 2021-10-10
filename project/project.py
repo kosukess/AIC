@@ -48,7 +48,7 @@ class project:
         self.w = w
         self.draw_or_not = 1
         self.white_board = np.full([self.h, self.w, 3], 255, np.uint8)
-        self.botton_board = np.full(size, 255, np.uint8)
+        self.botton_board = np.full([self.h, self.w], 255, np.uint8)
         self.botton_board[0:int(h/2), 0:int(w/3)]=0
         self.botton_board[0:int(h/2), int(w/3):int(2*w/3)]=40
         self.botton_board[0:int(h/2), int(2*w/3):w]=80
@@ -80,16 +80,10 @@ class project:
 
         self.clf = make_pipeline(StandardScaler(), SVC(gamma='auto', kernel='rbf'))
         
-        self.preprocessdata = preprocessdata(topology, num_parts)
+        self.preprocessdata = preprocessdata(topology, self.num_parts)
 
-        svm_train = False
-        if svm_train:
-            self.clf, predicted = self.preprocessdata.trainsvm(self.clf, joints_train, joints_test, hand.labels_train, hand.labels_test)
-            filename = 'svmmodel.sav'
-            pickle.dump(self.clf, open(filename, 'wb'))
-        else:
-            filename = 'svmmodel.sav'
-            self.clf = pickle.load(open(filename, 'rb'))
+        filename = 'svmmodel.sav'
+        self.clf = pickle.load(open(filename, 'rb'))
         
         with open('preprocess/gesture.json', 'r') as f:
             gesture = json.load(f)
@@ -121,7 +115,7 @@ class project:
         for i in joints:
             cv2.circle(image, (i[0],i[1]), 2, (0,0,255), 1)
         cv2.circle(image, (joints[0][0],joints[0][1]), 2, (255,0,255), 1)
-        for i in hand_pose['skeleton']:
+        for i in self.hand_pose['skeleton']:
             if joints[i[0]-1][0]==0 or joints[i[1]-1][0] == 0:
                 break
             cv2.line(image, (joints[i[0]-1][0],joints[i[0]-1][1]), (joints[i[1]-1][0],joints[i[1]-1][1]), (0,255,0), 1)
@@ -159,7 +153,7 @@ class project:
                 if joints[5]!=[0,0]:
                     self.rectangle.append((int(joints[8][0]*(self.w/224)), int(joints[8][1])*(self.h/244)))
 
-            if (len(rectangle)) > 0:
+            if (len(self.rectangle)) > 0:
                 if self.rectangle[-1]!=[0,0]:
                     cv2.line(image,self.rectangle[-2], self.rectangle[-1], (0,0,0), 2)
         if self.draw_or_not == 1:
@@ -167,8 +161,8 @@ class project:
                 if joints[5]!=[0,0]:
                     self.rectangle.append((int(joints[8[0]*(self.w/224)), int(joints[8][1])*(self.h/244)))
 
-            if (len(rectangle)) > 0:
-                if rectangle[-1]!=[0,0]:
+            if (len(self.rectangle)) > 0:
+                if self.rectangle[-1]!=[0,0]:
                     cv2.line(image, self.rectangle[-2]*, self.rectangle[-1], (255,255,255), 5)
 
     def switch(self, current_gesture):
@@ -195,5 +189,5 @@ class project:
 
     def end(self):
         self.camera.unobserve_all()
-        #camera.running = False
-
+    
+    #camera.running = False
