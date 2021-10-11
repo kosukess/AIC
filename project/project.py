@@ -148,7 +148,7 @@ class Project:
         return hand_pose_image, gesture
 
 
-    def hand_pose(self, image):
+    def estimate_hand_pose(self, image):
         data = self.preprocess(image)
         cmap, paf = self.model_trt(data)
         cmap, paf = cmap.detach().cpu(), paf.detach().cpu()
@@ -192,7 +192,7 @@ class Project:
 
     def switch(self, current_frame):
         if (current_frame.gesture == "clear")and(self.pre_frame.gesture == "click"):
-            x_position, y_position = int(self.joints[self.cursor_joint][0]*(self.w/224)), int(self.joint[self.cursor_joint][1]*(self.h/224))
+            x_position, y_position = int(self.joints[self.cursor_joint][0]*(self.w/224)), int(self.joints[self.cursor_joint][1]*(self.h/224))
             color = self.botton_board[x_position, y_position]
             if color == 0:
                 self.draw_or_not = self.draw_or_not*-1
@@ -200,9 +200,9 @@ class Project:
 
     def execute(self, change):
         image = change['new']
-        gray = cv2.cvtColor(image)
-        hand_pose_image, hand_pose_joints = self.hand_pose(image)
-        hand_pose_image, current_gesture = self.classify_gesture(hand_pose_image)
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        hand_pose_image, hand_pose_joints = self.estimate_hand_pose(image)
+        hand_pose_image, current_gesture = self.classify_gesture(hand_pose_image, hand_pose_joints)
         current_hand_position = np.array(hand_pose_joints[self.cursor_joint])
 
         # frameの作成
@@ -217,9 +217,8 @@ class Project:
                 current_frame.update_hand_position(current_hand_position)
         
         # gesture分類
-        self.switch(current_gesture)
-        self.pre_gesture
-        self.draw(self.white_board, self.joints)
+        self.switch(current_frame)
+        self.draw(self.white_board, hand_pose_joints)
 
         # 表示
         cv2.imshow('white board', self.white_board)
