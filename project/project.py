@@ -148,7 +148,7 @@ class Project:
         return hand_pose_image, gesture
 
 
-    def hand_pose(self, image):
+    def estimate_hand_pose(self, image):
         data = self.preprocess(image)
         cmap, paf = self.model_trt(data)
         cmap, paf = cmap.detach().cpu(), paf.detach().cpu()
@@ -200,9 +200,9 @@ class Project:
 
     def execute(self, change):
         image = change['new']
-        gray = cv2.cvtColor(image)
-        hand_pose_image, hand_pose_joints = self.hand_pose(image)
-        hand_pose_image, current_gesture = self.classify_gesture(hand_pose_image)
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        hand_pose_image, hand_pose_joints = self.estimate_hand_pose(image)
+        hand_pose_image, current_gesture = self.classify_gesture(hand_pose_image, hand_pose_joints)
         current_hand_position = np.array(hand_pose_joints[self.cursor_joint])
 
         # frameの作成
@@ -217,8 +217,7 @@ class Project:
                 current_frame.update_hand_position(current_hand_position)
         
         # gesture分類
-        self.switch(current_gesture)
-        self.pre_gesture
+        self.switch(current_frame)
         self.draw(self.white_board, self.joints)
 
         # 表示
