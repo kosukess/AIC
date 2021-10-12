@@ -192,7 +192,7 @@ class Project:
 
     def switch(self, current_frame):
         if (current_frame.gesture == "clear")and(self.pre_frame.gesture == "click"):
-            x_position, y_position = int(self.joints[self.cursor_joint][0]*(self.w/224)), int(self.joint[self.cursor_joint][1]*(self.h/224))
+            x_position, y_position = int(self.joints[self.cursor_joint][0]*(self.w/224)), int(self.joints[self.cursor_joint][1]*(self.h/224))
             color = self.botton_board[x_position, y_position]
             if color == 0:
                 self.draw_or_not = self.draw_or_not*-1
@@ -218,7 +218,7 @@ class Project:
         
         # gesture分類
         self.switch(current_frame)
-        self.draw(self.white_board, self.joints)
+        self.draw(self.white_board, hand_pose_joints)
 
         # 表示
         cv2.imshow('white board', self.white_board)
