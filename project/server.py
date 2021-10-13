@@ -1,43 +1,39 @@
 import socket
-
-import socket
 import time
+import signal
+import sys
+import pickle
 
-def server():
-    M_SIZE = 1024
+class server():
+    def __init__(self) -> None:
+        self.M_SIZE = 1024
+        host = '192.168.55.1'
+        port = 30001
+        locaddr = (host, port)
 
-    # 
-    host = '127.0.0.1'
-    port = 30000
+        # ①ソケットを作成する
+        self.sock = socket.socket(socket.AF_INET, type=socket.SOCK_DGRAM)
+        print('create socket')
 
-    locaddr = (host, port)
+        # ②自ホストで使用するIPアドレスとポート番号を指定
+        self.sock.bind(locaddr)
 
-    # ①ソケットを作成する
-    sock = socket.socket(socket.AF_INET, type=socket.SOCK_DGRAM)
-    print('create socket')
+        signal.signal(signal.SIGINT, self.handler)
+        
+    def handler(self, signum, frame):
+        print("\nclose socket")
+        self.sock.close()
+        print("pushed Ctrl-C")
+        sys.exit(0)
 
-    # ②自ホストで使用するIPアドレスとポート番号を指定
-    sock.bind(locaddr)
-
-    while True:
-        try :
+    def server(self):
+        while True:
             # ③Clientからのmessageの受付開始
-            print('Waiting message')
-            message, cli_addr = sock.recvfrom(M_SIZE)
-            message = message.decode(encoding='utf-8')
+            #print('Waiting message')
+            message, cli_addr = self.sock.recvfrom(self.M_SIZE)
+            message = pickle.loads(message)
             print(f'Received message is [{message}]')
 
-            # Clientが受信待ちになるまで待つため
-            time.sleep(1)
-
-            # ④Clientへ受信完了messageを送信
-            print('Send response to Client')
-            sock.sendto('Success to receive message'.encode(encoding='utf-8'), cli_addr)
-
-        except KeyboardInterrupt:
-            print ('\n . . .\n')
-            sock.close()
-            break
-
 if __name__ == "__main__":
-    server()
+    a = server()
+    a.server()

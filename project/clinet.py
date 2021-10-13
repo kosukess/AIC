@@ -1,42 +1,46 @@
 import cv2
 import time
 import socket 
+import signal
+import sys
+import pickle
 
-def client():
-    M_SIZE = 1024
+class client():
+    def handler(self, signum, frame):
+        print("\nclose socket")
+        self.sock.close()
+        print("pushed Ctrl-C")
+        sys.exit(0)
 
-    # Serverのアドレスを用意。Serverのアドレスは確認しておく必要がある。
-    serv_address = ('192.168.55.100', 30000)
+    def client(self):
+        M_SIZE = 1024
 
-    # ①ソケットを作成する
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # Serverのアドレスを用意。Serverのアドレスは確認しておく必要がある。
+        serv_address = ('192.168.55.1', 30001)
+        cli_address = ('192.168.55.1', 30000)
 
-    while True:
-        try:
+        # ①ソケットを作成する
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.bind(cli_address)
+
+        signal.signal(signal.SIGINT, self.handler)
+
+        while True:
             # ②messageを送信する
             print('Input any messages, Type [end] to exit')
             message = input()
             if message != 'end':
-                send_len = sock.sendto(message.encode('utf-8'), serv_address)
+                data = [message]
+                send_len = self.sock.sendto(pickle.dumps(data), serv_address)
                 # ※sendtoメソッドはkeyword arguments(address=serv_addressのような形式)を受け付けないので注意
-
-                # ③Serverからのmessageを受付開始
-                print('Waiting response from Server')
-                rx_meesage, addr = sock.recvfrom(M_SIZE)
-                print(f"[Server]: {rx_meesage.decode(encoding='utf-8')}")
 
             else:
                 print('closing socket')
-                sock.close()
+                self.sock.close()
                 print('done')
                 break
 
-        except KeyboardInterrupt:
-            print('closing socket')
-            sock.close()
-            print('done')
-            break
-
 
 if __name__ == "__main__":
-    client()
+    a = client()
+    a.client()

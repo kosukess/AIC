@@ -6,12 +6,15 @@ import matplotlib.image as mpimg
 import trt_pose.coco
 import math
 import os
+import sys
 import numpy as np
 import traitlets
 import pickle 
 import trt_pose.models
 import torch
 import torch2trt
+import socket
+import signal
 from torch2trt import TRTModule
 from preprocessdata import preprocessdata
 from trt_pose.draw_objects import DrawObjects
@@ -112,6 +115,25 @@ class Project:
                         maxLevel = 2,
                         criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
 
+        # socket parameter
+        self.M_SIZE = 1024
+        self.server_address = ('192.168.55.1', 30001)
+        client_address = ('192.168.55.1', 30000)
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.bind(client_address)
+        signal.signal(signal.SIGINT, self.handler)
+
+
+    def handler(self, signum, frame):
+        self.sock.close()
+        print("\npushed Ctrl-C")
+        sys.exit(0)
+
+
+    def send_data(self, cursor, gesture_class):
+        data = [cursor, gesture_class]
+        send_len = self.sock.sendto(pickle.dumps(data), self.server_address)
+
 
     def preprocess(self, image):
         self.device = torch.device('cuda')
@@ -186,8 +208,14 @@ class Project:
 
 
     def kltTracker(self, current_frame, pre_frame):
-        p1, st, err = cv2.calcOpticalFlowPyrLK(pre_frame.img, current_frame.img, [[pre_frame.hand_position]], None, **self.lk_params)
-        return p1[0][0]
+        p1, st, err = cv2.calcOpticalFlowPyrLK(pre_frame.img, current_frame.img, np.array([[pre_frame.hand_position]]), None, **self.lk_params)
+        p0_inv, st_inv, err_inv = cv2.calcOpticalFlowPyrLK(current_frame.img, pre_frame.img, p1, None, **self.lk_params)
+        dif = pre_frame.hand_position - p0_inv[0][0]
+        abs_dif = self.calcAbs(dif)
+        if abs_dif > self.abs_dif_threshold:
+            return np.array([0, 0])
+        else:
+            return p1[0][0]
 
 
     def switch(self, current_frame):
@@ -203,19 +231,25 @@ class Project:
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         hand_pose_image, hand_pose_joints = self.estimate_hand_pose(image)
         hand_pose_image, current_gesture = self.classify_gesture(hand_pose_image, hand_pose_joints)
-        current_hand_position = np.array(hand_pose_joints[self.cursor_joint])
+        current_hand_position = np.array(hand_pose_joints[self.cursor_joint], dtype=np.float32)
 
         # frameの作成
         current_frame = Frame(gray, current_hand_position, current_gesture)
 
         # hand_poseが失敗していたらKLTtracker
+        print("\ncurrent_frame position: ", current_frame.hand_position, type(current_frame.hand_position), current_frame.hand_position.shape)
         if self.pre_frame is not None:
-            dif = current_frame.hand_position - self.pre_frame.hand_position
-            abs_dif = self.calcAbs(dif)
-            if abs_dif <= self.abs_dif_threshold:
-                current_hand_position = self.kltTracker(current_frame, self.pre_frame)
-                current_frame.update_hand_position(current_hand_position)
-        
+            if self.pre_frame.hand_position[0] != 0 or self.pre_frame.hand_position[1] != 0:
+                dif = current_frame.hand_position - self.pre_frame.hand_position
+                abs_dif = self.calcAbs(dif)
+                if abs_dif <= self.abs_dif_threshold:
+                    print("execute KLT tracker")
+                    current_hand_position = self.kltTracker(current_frame, self.pre_frame)
+                    current_frame.update_hand_position(current_hand_position)
+
+        self.send_data(current_hand_position, current_gesture)
+
+        '''
         # gesture分類
         self.switch(current_frame)
         self.draw(self.white_board, hand_pose_joints)
@@ -227,6 +261,7 @@ class Project:
         key = cv2.waitKey(1)
         if  key == ord('q'):
             self.end()
+        '''
 
         self.pre_frame = current_frame
         
