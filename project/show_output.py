@@ -4,7 +4,7 @@ import signal
 
 
 def main():
-    signal.singal(signal.SIGINT, signal.SIG_DFL)
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
     wb = Whiteboard(h=480, w=640)
     key = wb.show_whiteboard()
     if  key == ord('q'):
