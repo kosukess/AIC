@@ -1,8 +1,14 @@
 from whiteboard import Whiteboard
+import sys
 
 
 def main():
     wb = Whiteboard(h=480, w=640)
+    key = wb.show_whiteboard()
+    if  key == ord('q'):
+        wb.sock.close()
+        sys.exit()
+
     while True:
         data = wb.receive_data()
         wb.switch(data[1])
@@ -14,13 +20,3 @@ def main():
     
 if __name__ == "__main__":
     main()
-    
-
-
-
-
-
-        
-
-
-
