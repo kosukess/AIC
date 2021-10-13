@@ -1,5 +1,7 @@
 #マウスの位置とジェスチャークラスからホワイトボードに出力
 #draw_or_notを受け取るかどうか
+#ボタンも
+
 
 import numpy as np
 import cv2
@@ -34,7 +36,4 @@ class Whiteboard():
         cv2.imshow('white board', self.white_board)
         key = cv2.waitKey(1)
         if  key == ord('q'):
-            self.end()
-    
-    def end(self):
-        self.camera.unobserve_all()
+            ggg
