@@ -7,8 +7,8 @@ import pickle
 class server():
     def __init__(self) -> None:
         self.M_SIZE = 1024
-        host = '192.168.55.1'
-        port = 30001
+        host = '192.168.55.100'
+        port = 30000
         locaddr = (host, port)
 
         # ①ソケットを作成する

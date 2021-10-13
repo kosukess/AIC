@@ -19,7 +19,8 @@ class Whiteboard():
         self.rectangle = []
         self.h = h
         self.w = w
-        self.draw_or_not = 1
+        self.draw_or_not = -1
+        self.pre_cursor = None
         self.white_board = np.full([self.h, self.w, 3], 255, np.uint8)
         self.botton_board = np.full([self.h, self.w], 255, np.uint8)
         self.botton_board[0:int(h/2), 0:int(w/3)]=0
@@ -50,23 +51,22 @@ class Whiteboard():
 
 
     def draw(self, mouse_position, gesture_class):
+        cur_cursor = [int(mouse_position[0]*(self.w/224)), int(mouse_position[1]*(self.h/244))]
+        if self.pre_cursor is None:
+            if mouse_position[0] != 0 and mouse_position[1] != 0:
+                self.pre_cursor = cur_cursor
+        else:
             if self.draw_or_not == -1:
-                if gesture_class=="peace":
+                if gesture_class=="pan":
                     if mouse_position[0] != 0 and mouse_position[1] != 0:
-                        self.rectangle.append([int(mouse_position[0]*(self.w/224)), int(mouse_position[1])*(self.h/244)])
-
-                if (len(self.rectangle)) > 0:
-                    if self.rectangle[-1]!=[0,0]:
-                        cv2.line(self.white_board,self.rectangle[-2], self.rectangle[-1], (0,0,0), 2)
+                        cv2.line(self.white_board,self.pre_cursor, cur_cursor, (0,0,0), 2)
+                        self.pre_cursor = cur_cursor
 
             if self.draw_or_not == 1:
-                if gesture_class=="peace":
+                if gesture_class=="pan":
                     if mouse_position[0] != 0 and mouse_position[1] != 0:
-                        self.rectangle.append([int(mouse_position[0]*(self.w/224)), int(mouse_position[1])*(self.h/244)])
-
-                if len(self.rectangle) > 0:
-                    if self.rectangle[-1]!=[0,0]:
-                        cv2.line(self.white_board, self.rectangle[-2], self.rectangle[-1], (255,255,255), 5)
+                        cv2.line(self.white_board,self.pre_cursor, cur_cursor, (255,255,255), 5)
+                        self.pre_cursor = cur_cursor
    
     def switch(self, gesture_class):
         if (gesture_class == "fist")and(self.pre_gesture == "stop"):
