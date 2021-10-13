@@ -51,7 +51,7 @@ class Whiteboard():
 
     def draw(self, mouse_position, gesture_class):
             if self.draw_or_not == -1:
-                if gesture_class=="line":
+                if gesture_class=="peace":
                     if mouse_position!=[0,0]:
                         self.rectangle.append([int(mouse_position[0]*(self.w/224)), int(mouse_position[1])*(self.h/244)])
 
@@ -60,7 +60,7 @@ class Whiteboard():
                         cv2.line(self.white_board,self.rectangle[-2], self.rectangle[-1], (0,0,0), 2)
 
             if self.draw_or_not == 1:
-                if gesture_class=="line":
+                if gesture_class=="peace":
                     if mouse_position!=[0,0]:
                         self.rectangle.append([int(mouse_position[0]*(self.w/224)), int(mouse_position[1])*(self.h/244)])
 
@@ -69,7 +69,7 @@ class Whiteboard():
                         cv2.line(self.white_board, self.rectangle[-2], self.rectangle[-1], (255,255,255), 5)
    
     def switch(self, gesture_class):
-        if (gesture_class == "clear")and(self.pre_gesture == "click"):
+        if (gesture_class == "fist")and(self.pre_gesture == "stop"):
             x_position, y_position = int(self.mouse_position[0]*(self.w/224)), int(self.mouse_position[1]*(self.h/224))
             color = self.botton_board[x_position, y_position]
             if color == 0:
