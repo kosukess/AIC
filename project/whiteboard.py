@@ -43,8 +43,6 @@ class Whiteboard():
         message[0]: cursor data [0]: x, [1]: y
         message[1]: gesture class name
 
-        Returns:
-            [type]: [description]
         """        
         message, cli_addr = self.sock.recvfrom(self.M_SIZE)
         message = pickle.loads(message)
@@ -79,9 +77,7 @@ class Whiteboard():
         self.pre_gesture = gesture_class
 
     def show_whiteboard(self):
-        cv2.imshow('white board', self.white_board)
-
+        cv2.imshow('white board', self.white_board)       
+        key = cv2.waitKey(1)
+        return key
         
-        '''key = cv2.waitKey(1)
-        if  key == ord('q'):
-            ggg'''
