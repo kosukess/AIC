@@ -102,6 +102,7 @@ class Project:
         self.pre_frame = None
         self.cursor_joint = 8
         self.dif_threshold = 15
+        self.num_frames = 4
         self.abs_dif_threshold = self.dif_threshold * np.sqrt(2)
 
         # params for ShiTomasi corner detection
@@ -181,7 +182,20 @@ class Project:
 
 
     def gesture_class(self):
-        return self.preprocessdata.text
+        if self.preprocessdata.prev_queue == [1]* self.num_frames:
+            return self.gesture_type[0]
+        elif self.preprocessdata.prev_queue == [2]* self.num_frames:
+            return self.gesture_type[1]
+        elif self.preprocessdata.prev_queue == [3]* self.num_frames:
+            return self.gesture_type[2]
+        elif self.preprocessdata.prev_queue == [4]* self.num_frames:
+            return self.gesture_type[3]
+        elif self.preprocessdata.prev_queue == [5]* self.num_frames:
+            return self.gesture_type[4]
+        elif self.preprocessdata.prev_queue == [6]* self.num_frames:
+            return self.gesture_type[5]
+        elif self.preprocessdata.prev_queue == [7]*self.num_frames:
+            return self.gesture_type[6]
 
 
     def calcAbs(self, difvec):
@@ -237,7 +251,8 @@ class Project:
         current_frame = Frame(gray, current_hand_position, current_gesture)
 
         # hand_poseが失敗していたらKLTtracker
-        print("\ncurrent_frame position: ", current_frame.hand_position, type(current_frame.hand_position), current_frame.hand_position.shape)
+        print("\ncurrent_frame position: ", current_frame.hand_position)
+        print("current gesture: ", current_gesture)
         if self.pre_frame is not None:
             if self.pre_frame.hand_position[0] != 0 or self.pre_frame.hand_position[1] != 0:
                 dif = current_frame.hand_position - self.pre_frame.hand_position

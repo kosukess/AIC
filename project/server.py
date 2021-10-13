@@ -23,7 +23,6 @@ class server():
     def handler(self, signum, frame):
         print("\nclose socket")
         self.sock.close()
-        print("pushed Ctrl-C")
         sys.exit(0)
 
     def server(self):
