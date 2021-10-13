@@ -52,7 +52,7 @@ class Whiteboard():
     def draw(self, mouse_position, gesture_class):
             if self.draw_or_not == -1:
                 if gesture_class=="peace":
-                    if mouse_position!=[0,0]:
+                    if mouse_position[0] != 0 and mouse_position[1] != 0:
                         self.rectangle.append([int(mouse_position[0]*(self.w/224)), int(mouse_position[1])*(self.h/244)])
 
                 if (len(self.rectangle)) > 0:
@@ -61,7 +61,7 @@ class Whiteboard():
 
             if self.draw_or_not == 1:
                 if gesture_class=="peace":
-                    if mouse_position!=[0,0]:
+                    if mouse_position[0] != 0 and mouse_position[1] != 0:
                         self.rectangle.append([int(mouse_position[0]*(self.w/224)), int(mouse_position[1])*(self.h/244)])
 
                 if len(self.rectangle) > 0:
