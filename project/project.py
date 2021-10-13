@@ -33,6 +33,7 @@ from frame import Frame
 class Project:
     def __init__(self, h=224, w=224):
         
+        # model load
         with open('preprocess/hand_pose.json', 'r') as f:
             self.hand_pose = json.load(f)
 
@@ -118,7 +119,7 @@ class Project:
 
         # socket parameter
         self.M_SIZE = 1024
-        self.server_address = ('192.168.55.1', 30001)
+        self.server_address = ('192.168.55.100', 30000)
         client_address = ('192.168.55.1', 30000)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sock.bind(client_address)

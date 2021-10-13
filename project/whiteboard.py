@@ -1,10 +1,13 @@
 #マウスの位置とジェスチャークラスからホワイトボードに出力
 #ボタンも
-
-
-
 import numpy as np
 import cv2
+import socket
+import pickle
+
+"""[summary]
+
+"""
 
 class Whiteboard():
     def __init__(self,h=224, w=224):
@@ -20,6 +23,28 @@ class Whiteboard():
         self.botton_board[int(h/2):h, 0:int(w/3)]=120
         self.botton_board[int(h/2):h, int(w/3):int(2*w/3)]=160
         self.botton_board[int(h/2):h, int(2*w/3):w]=200
+
+        # udp
+        self.M_SIZE = 1024
+        host = '192.168.55.100'
+        port = 30000
+        locaddr = (host, port)
+        self.sock = socket.socket(socket.AF_INET, type=socket.SOCK_DGRAM)
+        self.sock.bind(locaddr)
+        print('create socket')
+
+    def receive_data(self):
+        """
+        message[0]: cursor data [0]: x, [1]: y
+        message[1]: gesture class name
+
+        Returns:
+            [type]: [description]
+        """        
+        message, cli_addr = self.sock.recvfrom(self.M_SIZE)
+        message = pickle.loads(message)
+        return message
+
 
     def draw(self, joints, gesture_class):
             if self.draw_or_not == -1:
