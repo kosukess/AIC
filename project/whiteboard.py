@@ -1,13 +1,15 @@
-#マウスの位置とジェスチャークラスからホワイトボードに出力
-#ボタンも
-
-
+#マウスの位置とジェスチャークラスを受け取る
+#マウス位置＝mouse_position
+#ジェスチャークラス=gesture_class
+#受け取ったもので描く・消す・スイッチ
+#描画したホワイトボードの表示
 
 import numpy as np
 import cv2
 
 class Whiteboard():
     def __init__(self,h=224, w=224):
+        self.pre_gesture = ""
         self.rectangle = []
         self.h = h
         self.w = w
@@ -21,34 +23,37 @@ class Whiteboard():
         self.botton_board[int(h/2):h, int(w/3):int(2*w/3)]=160
         self.botton_board[int(h/2):h, int(2*w/3):w]=200
 
-    def draw(self, joints, gesture_class):
+    def draw(self, mouse_position, gesture_class):
             if self.draw_or_not == -1:
                 if gesture_class=="line":
-                    if joints[5]!=[0,0]:
-                        self.rectangle.append([int(joints[self.cursor_joint][0]*(self.w/224)), int(joints[self.cursor_joint][1])*(self.h/244)])
+                    if mouse_position!=[0,0]:
+                        self.rectangle.append([int(mouse_position[0]*(self.w/224)), int(mouse_position[1])*(self.h/244)])
 
                 if (len(self.rectangle)) > 0:
                     if self.rectangle[-1]!=[0,0]:
                         cv2.line(self.white_board,self.rectangle[-2], self.rectangle[-1], (0,0,0), 2)
+
             if self.draw_or_not == 1:
                 if gesture_class=="line":
-                    if joints[5]!=[0,0]:
-                        self.rectangle.append([int(joints[self.cursor_joint][0]*(self.w/224)), int(joints[self.cursor_joint][1])*(self.h/244)])
+                    if mouse_position!=[0,0]:
+                        self.rectangle.append([int(mouse_position[0]*(self.w/224)), int(mouse_position[1])*(self.h/244)])
 
                 if len(self.rectangle) > 0:
                     if self.rectangle[-1]!=[0,0]:
                         cv2.line(self.white_board, self.rectangle[-2], self.rectangle[-1], (255,255,255), 5)
    
-    def switch(self, current_gesture):
-        if (current_gesture == "clear")and(pre_gesture == "click"):
-            x_position, y_position = int(self.joints[self.cursor_joint][0]*(self.w/224)), int(self.joints[self.cursor_joint][1]*(self.h/224))
+    def switch(self, gesture_class):
+        if (gesture_class == "clear")and(self.pre_gesture == "click"):
+            x_position, y_position = int(self.mouse_position[0]*(self.w/224)), int(self.mouse_position[1]*(self.h/224))
             color = self.botton_board[x_position, y_position]
             if color == 0:
                 self.draw_or_not = self.draw_or_not*-1
-        pre_gesture = current_gesture
+        self.pre_gesture = gesture_class
 
     def show_whiteboard(self):
         cv2.imshow('white board', self.white_board)
-        key = cv2.waitKey(1)
+
+        
+        '''key = cv2.waitKey(1)
         if  key == ord('q'):
-            ggg
+            ggg'''
