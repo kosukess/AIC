@@ -46,7 +46,7 @@ class Project:
 
         WIDTH = 224
         HEIGHT = 224
-        self.rectangle = []
+        '''self.rectangle = []
         self.h = h
         self.w = w
         self.draw_or_not = 1
@@ -58,7 +58,7 @@ class Project:
         self.botton_board[int(h/2):h, 0:int(w/3)]=120
         self.botton_board[int(h/2):h, int(w/3):int(2*w/3)]=160
         self.botton_board[int(h/2):h, int(2*w/3):w]=200
-
+'''
         data = torch.zeros((1, 3, HEIGHT, WIDTH)).cuda()
 
         if not os.path.exists('model/hand_pose_resnet18_att_244_244_trt.pth'):
@@ -202,7 +202,7 @@ class Project:
         return np.sqrt(difvec[0]**2+difvec[1]**2)
 
 
-    def draw(self, image, joints):
+    '''def draw(self, image, joints):
         if self.draw_or_not == -1:
             if self.preprocessdata.text=="line":
                 if joints[5]!=[0,0]:
@@ -219,7 +219,7 @@ class Project:
             if len(self.rectangle) > 0:
                 if self.rectangle[-1]!=[0,0]:
                     cv2.line(image, self.rectangle[-2], self.rectangle[-1], (255,255,255), 5)
-
+'''
 
     def kltTracker(self, current_frame, pre_frame):
         p1, st, err = cv2.calcOpticalFlowPyrLK(pre_frame.img, current_frame.img, np.array([[pre_frame.hand_position]]), None, **self.lk_params)
@@ -232,13 +232,13 @@ class Project:
             return p1[0][0]
 
 
-    def switch(self, current_frame):
+    '''def switch(self, current_frame):
         if (current_frame.gesture == "clear")and(self.pre_frame.gesture == "click"):
             x_position, y_position = int(self.joints[self.cursor_joint][0]*(self.w/224)), int(self.joints[self.cursor_joint][1]*(self.h/224))
             color = self.botton_board[x_position, y_position]
             if color == 0:
                 self.draw_or_not = self.draw_or_not*-1
-
+'''
 
     def execute(self, change):
         image = change['new']
