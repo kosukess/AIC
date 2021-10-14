@@ -60,6 +60,9 @@ class dataloader:
         WIDTH = 256
         HEIGHT = 256
         for filename in sorted(os.listdir(train_path)):
+            #print(filename)
+            if filename == '.ipynb_checkpoints':
+                continue
             self.train_file_name.append(filename)
             image = cv2.imread(train_path+filename)
             #image = image[:, ::-1, :]
@@ -69,6 +72,9 @@ class dataloader:
             self.train_images.append(image)
      
         for filename in sorted(os.listdir(test_path)):
+            #print(filename)
+            if filename == '.ipynb_checkpoints':
+                continue
             self.test_file_name.append(filename)
             image = cv2.imread(test_path+filename)
             #image = image[:, ::-1, :]
