@@ -53,8 +53,10 @@ class Whiteboard():
     def draw(self, mouse_position, gesture_class):
         cur_cursor = [int(mouse_position[0]*(self.w/224)), int(mouse_position[1]*(self.h/244))]
         if self.pre_cursor is None:
-            if mouse_position[0] != 0 and mouse_position[1] != 0:
+            if mouse_position[0] != 0 or mouse_position[1] != 0:
                 self.pre_cursor = cur_cursor
+            else:
+                self.pre_cursor = None
         else:
             if self.draw_or_not == -1:
                 if gesture_class=="pan":

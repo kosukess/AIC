@@ -36,67 +36,42 @@ class Project:
         # model load
         with open('preprocess/hand_pose.json', 'r') as f:
             self.hand_pose = json.load(f)
-
         topology = trt_pose.coco.coco_category_to_topology(self.hand_pose)
-        
         self.num_parts = len(self.hand_pose['keypoints'])
         num_links = len(self.hand_pose['skeleton'])
-
-        model = trt_pose.models.resnet18_baseline_att(self.num_parts, 2 * num_links).cuda().eval()
-        
-
-        WIDTH = 224
-        HEIGHT = 224
-        '''self.rectangle = []
-        self.h = h
-        self.w = w
-        self.draw_or_not = 1
-        self.white_board = np.full([self.h, self.w, 3], 255, np.uint8)
-        self.botton_board = np.full([self.h, self.w], 255, np.uint8)
-        self.botton_board[0:int(h/2), 0:int(w/3)]=0
-        self.botton_board[0:int(h/2), int(w/3):int(2*w/3)]=40
-        self.botton_board[0:int(h/2), int(2*w/3):w]=80
-        self.botton_board[int(h/2):h, 0:int(w/3)]=120
-        self.botton_board[int(h/2):h, int(w/3):int(2*w/3)]=160
-        self.botton_board[int(h/2):h, int(2*w/3):w]=200
-'''
+        model = trt_pose.models.resnet18_baseline_att(self.num_parts, 2 * num_links).cuda().eval() 
         data = torch.zeros((1, 3, HEIGHT, WIDTH)).cuda()
-
         if not os.path.exists('model/hand_pose_resnet18_att_244_244_trt.pth'):
             MODEL_WEIGHTS = 'model/hand_pose_resnet18_att_244_244.pth'
             model.load_state_dict(torch.load(MODEL_WEIGHTS))
             self.model_trt = torch2trt.torch2trt(model, [data], fp16_mode=True, max_workspace_size=1<<25)
             OPTIMIZED_MODEL = 'model/hand_pose_resnet18_att_244_244_trt.pth'
             torch.save(self.model_trt.state_dict(), OPTIMIZED_MODEL)
-
         OPTIMIZED_MODEL = 'model/hand_pose_resnet18_att_244_244_trt.pth'
-        
-
         self.model_trt = TRTModule()
         self.model_trt.load_state_dict(torch.load(OPTIMIZED_MODEL))
 
+        # parse
         self.parse_objects = ParseObjects(topology,cmap_threshold=0.12, link_threshold=0.15)
         draw_objects = DrawObjects(topology)
-
         self.mean = torch.Tensor([0.485, 0.456, 0.406]).cuda()
         self.std = torch.Tensor([0.229, 0.224, 0.225]).cuda()
         self.device = torch.device('cuda')
 
+        # classify
         self.clf = make_pipeline(StandardScaler(), SVC(gamma='auto', kernel='rbf'))
-        
         self.preprocessdata = preprocessdata(topology, self.num_parts)
-
         filename = 'svmmodel.sav'
         self.clf = pickle.load(open(filename, 'rb'))
-        
         with open('preprocess/gesture.json', 'r') as f:
             gesture = json.load(f)
         self.gesture_type = gesture["classes"]
 
-
+        # usb camera
+        WIDTH = 224
+        HEIGHT = 224
         self.camera = USBCamera(width=WIDTH, height=HEIGHT, capture_fps=30, capture_device=0)
         #camera = CSICamera(width=WIDTH, height=HEIGHT, capture_fps=30)
-
         self.camera.running = True
 
         # hand tracking
@@ -203,25 +178,6 @@ class Project:
         return np.sqrt(difvec[0]**2+difvec[1]**2)
 
 
-    '''def draw(self, image, joints):
-        if self.draw_or_not == -1:
-            if self.preprocessdata.text=="line":
-                if joints[5]!=[0,0]:
-                    self.rectangle.append([int(joints[self.cursor_joint][0]*(self.w/224)), int(joints[self.cursor_joint][1])*(self.h/244)])
-
-            if (len(self.rectangle)) > 0:
-                if self.rectangle[-1]!=[0,0]:
-                    cv2.line(image,self.rectangle[-2], self.rectangle[-1], (0,0,0), 2)
-        if self.draw_or_not == 1:
-            if self.preprocessdata.text=="line":
-                if joints[5]!=[0,0]:
-                    self.rectangle.append([int(joints[self.cursor_joint][0]*(self.w/224)), int(joints[self.cursor_joint][1])*(self.h/244)])
-
-            if len(self.rectangle) > 0:
-                if self.rectangle[-1]!=[0,0]:
-                    cv2.line(image, self.rectangle[-2], self.rectangle[-1], (255,255,255), 5)
-'''
-
     def kltTracker(self, current_frame, pre_frame):
         p1, st, err = cv2.calcOpticalFlowPyrLK(pre_frame.img, current_frame.img, np.array([[pre_frame.hand_position]]), None, **self.lk_params)
         p0_inv, st_inv, err_inv = cv2.calcOpticalFlowPyrLK(current_frame.img, pre_frame.img, p1, None, **self.lk_params)
@@ -232,14 +188,6 @@ class Project:
         else:
             return p1[0][0]
 
-
-    '''def switch(self, current_frame):
-        if (current_frame.gesture == "clear")and(self.pre_frame.gesture == "click"):
-            x_position, y_position = int(self.joints[self.cursor_joint][0]*(self.w/224)), int(self.joints[self.cursor_joint][1]*(self.h/224))
-            color = self.botton_board[x_position, y_position]
-            if color == 0:
-                self.draw_or_not = self.draw_or_not*-1
-'''
 
     def execute(self, change):
         image = change['new']
@@ -262,23 +210,7 @@ class Project:
                     print("execute KLT tracker")
                     current_hand_position = self.kltTracker(current_frame, self.pre_frame)
                     current_frame.update_hand_position(current_hand_position)
-
         self.send_data(current_hand_position, current_gesture)
-
-        '''
-        # gesture分類
-        self.switch(current_frame)
-        self.draw(self.white_board, hand_pose_joints)
-
-        # 表示
-        cv2.imshow('white board', self.white_board)
-        #image = image[:, ::-1, :]
-        cv2.imshow('screen', hand_pose_image)
-        key = cv2.waitKey(1)
-        if  key == ord('q'):
-            self.end()
-        '''
-
         self.pre_frame = current_frame
         
 
