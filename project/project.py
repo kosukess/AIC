@@ -34,6 +34,8 @@ class Project:
     def __init__(self, h=224, w=224):
         
         # model load
+        WIDTH = 224
+        HEIGHT = 224
         with open('preprocess/hand_pose.json', 'r') as f:
             self.hand_pose = json.load(f)
         topology = trt_pose.coco.coco_category_to_topology(self.hand_pose)
@@ -68,8 +70,6 @@ class Project:
         self.gesture_type = gesture["classes"]
 
         # usb camera
-        WIDTH = 224
-        HEIGHT = 224
         self.camera = USBCamera(width=WIDTH, height=HEIGHT, capture_fps=30, capture_device=0)
         #camera = CSICamera(width=WIDTH, height=HEIGHT, capture_fps=30)
         self.camera.running = True
@@ -108,6 +108,7 @@ class Project:
 
 
     def send_data(self, cursor, gesture_class):
+        cursor = [224 - cursor[0], cursor[1]]
         data = [cursor, gesture_class]
         send_len = self.sock.sendto(pickle.dumps(data), self.server_address)
 
