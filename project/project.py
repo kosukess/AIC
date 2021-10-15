@@ -77,7 +77,7 @@ class Project:
         # hand tracking
         self.pre_frame = None
         self.cursor_joint = 8
-        self.dif_threshold = 15
+        self.dif_threshold = 20
         self.num_frames = 4
         self.abs_dif_threshold = self.dif_threshold * np.sqrt(2)
 
