@@ -76,7 +76,8 @@ class Project:
 
         # hand tracking
         self.pre_frame = None
-        self.cursor_joint = 8
+        self.cursor_fist_joint = 7
+        self.cursor_stop_joint = 8
         self.dif_threshold = 20
         self.num_frames = 4
         self.abs_dif_threshold = self.dif_threshold * np.sqrt(2)
@@ -104,13 +105,29 @@ class Project:
     def handler(self, signum, frame):
         self.sock.close()
         print("\npushed Ctrl-C")
-        sys.exit(0)
+        sys.exit()
 
 
     def send_data(self, cursor, gesture_class):
         cursor = [224 - cursor[0], cursor[1]]
         data = [cursor, gesture_class]
         send_len = self.sock.sendto(pickle.dumps(data), self.server_address)
+
+    
+    def get_hand_position(self, hand_pose, gesture):
+        if gesture is not None:
+            gesture_to_find_pos = gesture
+        else:
+            if self.pre_frame is not None:
+                gesture_to_find_pos = self.pre_frame.gesture
+            else:
+                gesture_to_find_pos = None
+                
+        if gesture_to_find_pos == self.gesture_type[1] or gesture_to_find_pos == self.gesture_type[3]:
+            return np.array(hand_pose[self.cursor_fist_joint], dtype=np.float32)
+        else:
+            return np.array(hand_pose[self.cursor_stop_joint], dtype=np.float32)
+            
 
 
     def preprocess(self, image):
@@ -190,27 +207,50 @@ class Project:
             return p1[0][0]
 
 
+    def execute_klt(self, current_frame):
+        print("\nnew frame gesture: ", current_frame.gesture)
+        print("\t(trt_hand_pose) position: ", current_frame.hand_position)
+        if self.pre_frame is not None:
+            if current_frame.hand_position[0] == 0 and current_frame.hand_position[1] == 0:
+                if self.pre_frame.hand_position[0] == 0 and self.pre_frame.hand_position[1] == 0:
+                    return np.array([0., 0.])
+                else:
+                    dif = current_frame.hand_position - self.pre_frame.hand_position
+                    abs_dif = self.calcAbs(dif)
+                    current_hand_position = self.kltTracker(current_frame, self.pre_frame)
+                    current_frame.update_hand_position(current_hand_position)
+                    print("\tcan't track hand by trt_pose_hand  ->  execute KLT tracker")
+                    print("\t(KLT) position: ", current_frame.hand_position, current_hand_position)
+                    return current_hand_position
+            else:
+                if not (self.pre_frame.hand_position[0] == 0 and self.pre_frame.hand_position[1] == 0):
+                    dif = current_frame.hand_position - self.pre_frame.hand_position
+                    abs_dif = self.calcAbs(dif)
+                    if abs_dif > self.abs_dif_threshold:
+                        current_hand_position = self.kltTracker(current_frame, self.pre_frame)
+                        current_frame.update_hand_position(current_hand_position)
+                        print("\tabs(cur_pos - pre_pos) > threshold  ->  execute KLT tracker")
+                        print("\t(KLT) position: ", current_frame.hand_position, current_hand_position)
+                        return current_hand_position
+                    else:
+                        return current_frame.hand_position
+                else:
+                    return current_frame.hand_position
+
+
     def execute(self, change):
         image = change['new']
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         hand_pose_image, hand_pose_joints = self.estimate_hand_pose(image)
         hand_pose_image, current_gesture = self.classify_gesture(hand_pose_image, hand_pose_joints)
-        current_hand_position = np.array(hand_pose_joints[self.cursor_joint], dtype=np.float32)
+        current_hand_position = self.get_hand_position(hand_pose_joints, current_gesture)
 
         # frameの作成
         current_frame = Frame(gray, current_hand_position, current_gesture)
 
         # hand_poseが失敗していたらKLTtracker
-        print("\ncurrent_frame position: ", current_frame.hand_position)
-        print("current gesture: ", current_gesture)
-        if self.pre_frame is not None:
-            if self.pre_frame.hand_position[0] != 0 or self.pre_frame.hand_position[1] != 0:
-                dif = current_frame.hand_position - self.pre_frame.hand_position
-                abs_dif = self.calcAbs(dif)
-                if abs_dif <= self.abs_dif_threshold:
-                    print("execute KLT tracker")
-                    current_hand_position = self.kltTracker(current_frame, self.pre_frame)
-                    current_frame.update_hand_position(current_hand_position)
+        current_hand_position = self.execute_klt(current_frame)
+                    
         self.send_data(current_hand_position, current_gesture)
         self.pre_frame = current_frame
         
