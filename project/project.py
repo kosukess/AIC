@@ -63,11 +63,11 @@ class Project:
         # classify
         self.clf = make_pipeline(StandardScaler(), SVC(gamma='auto', kernel='rbf'))
         self.preprocessdata = preprocessdata(topology, self.num_parts)
-        filename = 'svmmodel.sav'
+        filename = 'svmmodel_new.sav'
         self.clf = pickle.load(open(filename, 'rb'))
         with open('preprocess/gesture.json', 'r') as f:
             gesture = json.load(f)
-        self.gesture_type = gesture["classes"]
+        self.gesture_type = gesture["drawing"]
 
         # usb camera
         self.camera = USBCamera(width=WIDTH, height=HEIGHT, capture_fps=30, capture_device=0)
