@@ -78,9 +78,9 @@ class Project:
         self.pre_frame = None
         self.cursor_fist_joint = 7
         self.cursor_stop_joint = 8
-        self.dif_threshold = 20
+        self.dif_threshold = 10
         self.num_frames = 4
-        self.abs_dif_threshold = self.dif_threshold * np.sqrt(2)
+        self.klt_threshold = 20
 
         # params for ShiTomasi corner detection
         self.feature_params = dict( maxCorners = 100,
@@ -109,6 +109,7 @@ class Project:
 
 
     def send_data(self, cursor, gesture_class):
+        print("send data")
         cursor = [224 - cursor[0], cursor[1]]
         data = [cursor, gesture_class]
         send_len = self.sock.sendto(pickle.dumps(data), self.server_address)
@@ -201,7 +202,7 @@ class Project:
         p0_inv, st_inv, err_inv = cv2.calcOpticalFlowPyrLK(current_frame.img, pre_frame.img, p1, None, **self.lk_params)
         dif = pre_frame.hand_position - p0_inv[0][0]
         abs_dif = self.calcAbs(dif)
-        if abs_dif > self.abs_dif_threshold:
+        if abs_dif > self.klt_threshold:
             return np.array([0, 0])
         else:
             return p1[0][0]
@@ -226,7 +227,7 @@ class Project:
                 if not (self.pre_frame.hand_position[0] == 0 and self.pre_frame.hand_position[1] == 0):
                     dif = current_frame.hand_position - self.pre_frame.hand_position
                     abs_dif = self.calcAbs(dif)
-                    if abs_dif > self.abs_dif_threshold:
+                    if abs_dif > self.dif_threshold:
                         current_hand_position = self.kltTracker(current_frame, self.pre_frame)
                         current_frame.update_hand_position(current_hand_position)
                         print("\tabs(cur_pos - pre_pos) > threshold  ->  execute KLT tracker")
@@ -236,6 +237,8 @@ class Project:
                         return current_frame.hand_position
                 else:
                     return current_frame.hand_position
+        else:
+            return current_frame.hand_position
 
 
     def execute(self, change):
