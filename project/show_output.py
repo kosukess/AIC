@@ -13,7 +13,7 @@ def main():
 
     while True:
         data = wb.receive_data()
-        wb.switch(data[1])
+        #wb.switch(data[1])
         wb.draw(data[0], data[1])
         key = wb.show_whiteboard()
         if  key == ord('q'):

@@ -76,6 +76,7 @@ class Project:
 
         # hand tracking
         self.pre_frame = None
+        self.pre_frame_good_estimate = None
         self.cursor_fist_joint = 7
         self.cursor_stop_joint = 8
         self.dif_threshold = 10
@@ -172,7 +173,7 @@ class Project:
         cmap, paf = cmap.detach().cpu(), paf.detach().cpu()
         counts, objects, peaks = self.parse_objects(cmap, paf)
         joints = self.preprocessdata.joints_inference(image, counts, objects, peaks)
-        self.draw_joints(image, joints)
+        #self.draw_joints(image, joints)
         return image, joints
 
 
@@ -209,8 +210,6 @@ class Project:
 
 
     def execute_klt(self, current_frame):
-        print("\nnew frame gesture: ", current_frame.gesture)
-        print("\t(trt_hand_pose) position: ", current_frame.hand_position)
         if self.pre_frame is not None:
             if current_frame.hand_position[0] == 0 and current_frame.hand_position[1] == 0:
                 if self.pre_frame.hand_position[0] == 0 and self.pre_frame.hand_position[1] == 0:
@@ -250,6 +249,8 @@ class Project:
 
         # frameの作成
         current_frame = Frame(gray, current_hand_position, current_gesture)
+        print("\nnew frame gesture: ", current_frame.gesture)
+        print("\t(trt_hand_pose) position: ", current_frame.hand_position)
 
         # hand_poseが失敗していたらKLTtracker
         current_hand_position = self.execute_klt(current_frame)

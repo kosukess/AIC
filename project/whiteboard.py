@@ -30,8 +30,9 @@ class Whiteboard():
         self.botton_board[int(h/2):h, 0:int(w/3)]=120
         self.botton_board[int(h/2):h, int(w/3):int(2*w/3)]=160
         self.botton_board[int(h/2):h, int(2*w/3):w]=200
+        self.mouse_position = np.array([0.,0.])
 
-        self.draw_gesture = "pan"
+        self.draw_gesture = "draw"
         self.threshold = 30
 
         # udp
@@ -51,6 +52,7 @@ class Whiteboard():
         """        
         message, cli_addr = self.sock.recvfrom(self.M_SIZE)
         message = pickle.loads(message)
+        self.mouse_position = np.array(message[0])
         return message
 
 
@@ -86,11 +88,13 @@ class Whiteboard():
         self.pre_gesture = gesture_class
    
     def switch(self, gesture_class):
-        if (gesture_class == "fist")and(self.pre_gesture == "stop"):
-            x_position, y_position = int(self.mouse_position[0]*(self.w/224)), int(self.mouse_position[1]*(self.h/224))
+        if (gesture_class == "func")and(self.pre_gesture != "func"):
+            x_position, y_position = int(self.mouse_position[1]*(self.w/224)), int(self.mouse_position[0]*(self.h/224))
             color = self.botton_board[x_position, y_position]
             if color == 0:
                 self.draw_or_not = self.draw_or_not*-1
+            
+        
 
     def show_whiteboard(self):
         cv2.imshow('white board', self.cursor_white_board)       
