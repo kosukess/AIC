@@ -78,9 +78,10 @@ class Project:
         self.pre_frame = Frame(None, np.array([0.,0.], dtype=np.float32), None)
         self.cursor_fist_joint = 7
         self.cursor_stop_joint = 8
-        self.dif_threshold = 5
+        self.dif_threshold = 3
         self.num_frames = 4
         self.klt_threshold = 20
+        self.cur_klt_threshold = 10
         self.zero_threshold = 20
         self.zero_counter = 0
 
@@ -127,7 +128,7 @@ class Project:
                 gesture_to_find_pos = None
                 
         if gesture_to_find_pos == self.gesture_type[1] or gesture_to_find_pos == self.gesture_type[3]:
-            return np.array(hand_pose[self.cursor_fist_joint], dtype=np.float32)
+            return np.array(hand_pose[self.cursor_stop_joint], dtype=np.float32)
         else:
             return np.array(hand_pose[self.cursor_stop_joint], dtype=np.float32)
             
@@ -255,7 +256,9 @@ class Project:
         if self.pre_frame.hand_position[0] == 0 and self.pre_frame.hand_position[1] == 0:
             print("\thand position is [0., 0.] in pre frame")
             return current_frame.hand_position
+
         pre_cur_dif = self.calcAbs(self.pre_frame.hand_position, current_frame.hand_position)
+
         if current_frame.hand_position[0] == 0 and current_frame.hand_position[1] == 0:
             self.zero_counter += 1
             if self.zero_counter > self.zero_threshold:
@@ -281,7 +284,8 @@ class Project:
             print("\ttrt pose estimate is bad  ->  execute KLT tracker")
             print("\t(KLT) position: ", current_hand_position)
             pre_klt_dif = self.calcAbs(self.pre_frame.hand_position, current_hand_position)
-            if pre_klt_dif <= pre_cur_dif:
+            cur_klt_dif = self.calcAbs(current_frame.hand_position, current_hand_position)
+            if pre_klt_dif <= pre_cur_dif and cur_klt_dif <= self.cur_klt_threshold:
                 print("\tKLT tracing result is adapted")
                 current_frame.update_hand_position(current_hand_position)
                 return current_hand_position
