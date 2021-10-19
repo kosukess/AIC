@@ -42,7 +42,7 @@ class Whiteboard():
         self.button_blwh = np.full([self.h, self.all_w], 255, np.uint8)
         self.make_button_blwh(self.button_blwh)
         self.pen_size = 1
-        self.max_pen_size = 30
+        self.max_pen_size = 50
 
         # udp
         self.M_SIZE = 1024
@@ -168,7 +168,7 @@ class Whiteboard():
                     thickness=1,
                     lineType=cv2.LINE_4)
         cv2.putText(img,
-                    text='30',
+                    text=str(self.max_pen_size),
                     org=(30, 265),
                     fontFace=cv2.FONT_HERSHEY_SIMPLEX,
                     fontScale=0.5,
@@ -177,7 +177,7 @@ class Whiteboard():
                     lineType=cv2.LINE_4)
         cv2.rectangle(img, (30, 270), (50, 450), (0, 0, 0), thickness=1, lineType=cv2.LINE_4)
         cv2.putText(img,
-                    text='1',
+                    text='0',
                     org=(35, 465),
                     fontFace=cv2.FONT_HERSHEY_SIMPLEX,
                     fontScale=0.5,
