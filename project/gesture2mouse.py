@@ -1,3 +1,4 @@
+#マウス実行ファイル
 from mouse import Mouse as ms
 import sys
 import signal

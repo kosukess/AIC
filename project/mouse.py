@@ -16,8 +16,9 @@ import time
 """
 
 class Mouse():
-    def __init__(self):
-
+    def __init__(self,h=224, w=224):
+        self.h = h
+        self.w = w
         self.screenWidth, self.screenHeight = pyautogui.size()
         self.pre_gesture = 'none'
         self.p_sc = 0
@@ -48,38 +49,35 @@ class Mouse():
         message = pickle.loads(message)
         return message
 
-
-    def calcAbs(self, difvec):
-        return np.sqrt(difvec[0]**2+difvec[1]**2)
-
-
     def control_cursor(self, mouse_position, gesture_name):
 
         if self.pre_gesture!="stop":
             #pyautogui.position()
             self.fixed_x = mouse_position[0]
             self.fixed_y = mouse_position[1] 
+
         if self.pre_gesture!="fist" and self.pre_gesture=="fist":
-            pyautogui.mouseUp(((mouse_position[0])*self.screenWidth)/256, ((mouse_position[1])*self.screenHeight)/256, button= 'left')
+            pyautogui.mouseUp(((mouse_position[0])*self.screenWidth)/self.w, ((mouse_position[1])*self.screenHeight)/self.h, button= 'left')
             pyautogui.click()
 
         if gesture_name == "stop":
             if mouse_position!=[0,0]:
-                pyautogui.mouseUp(((mouse_position[0])*self.screenWidth)/256, ((mouse_position[1])*self.screenHeight)/256, button= 'left')
-                pyautogui.moveTo(((mouse_position[0])*self.screenWidth)/256, ((mouse_position[1])*self.screenHeight)/256)
+                pyautogui.mouseUp(((mouse_position[0])*self.screenWidth)/self.w, ((mouse_position[1])*self.screenHeight)/self.h, button= 'left')
+                pyautogui.moveTo(((mouse_position[0])*self.screenWidth)/self.w, ((mouse_position[1])*self.screenHeight)/self.h)
 
 
         if gesture_name == "peace":   
             if mouse_position!=[0,0]:
-                pyautogui.mouseUp(((mouse_position[0])*self.screenWidth)/256, ((mouse_position[1])*self.screenHeight)/256, button= 'left')#to_scroll = (mouse_position[8][1]-mouse_position[0][1])/10
+                pyautogui.mouseUp(((mouse_position[0])*self.screenWidth)/self.w, ((mouse_position[1])*self.screenHeight)/self.h, button= 'left')#to_scroll = (mouse_position[8][1]-mouse_position[0][1])/10
                 to_scroll = (self.p_sc-mouse_position[1])
                 if to_scroll>0:
                     to_scroll = 1
                 else:
                     to_scroll = -1
-                pyautogui.scroll(int(to_scroll),x=(mouse_position[0]*self.screenWidth)/256, y=(mouse_position[1]*self.screenHeight)/256)
+                pyautogui.scroll(int(to_scroll),x=(mouse_position[0]*self.screenWidth)/self.w, y=(mouse_position[1]*self.screenHeight)/self.h)
         
-        if gesture_name == "ok":
+        #zoomインアウトは出来れば実装, cursor_controll_live_demo.ipynbがなぜ256で割ってるのか不明
+        '''if gesture_name == "ok":
             pyautogui.keyDown('ctrl')
             if mouse_position!=[0,0]:
                 pyautogui.mouseUp(((mouse_position[0])*self.screenWidth)/256, ((mouse_position[1])*self.screenHeight)/256, button= 'left')
@@ -99,7 +97,7 @@ class Mouse():
             
         if gesture_name == "xxx":    
             if mouse_position!=[0,0]:
-                pyautogui.mouseDown(((mouse_position[0])*self.screenWidth)/256, ((mouse_position[1])*self.screenHeight)/256, button= 'left')
+                pyautogui.mouseDown(((mouse_position[0])*self.screenWidth)/256, ((mouse_position[1])*self.screenHeight)/256, button= 'left')'''
         
         self.pre_gesture = gesture_name
         self.p_sc = mouse_position[1]   
