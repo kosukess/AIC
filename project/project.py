@@ -75,13 +75,14 @@ class Project:
         self.camera.running = True
 
         # hand tracking
-        self.pre_frame = None
-        self.pre_frame_good_estimate = None
+        self.pre_frame = Frame(None, np.array([0.,0.], dtype=np.float32), None)
         self.cursor_fist_joint = 7
         self.cursor_stop_joint = 8
-        self.dif_threshold = 10
+        self.dif_threshold = 5
         self.num_frames = 4
         self.klt_threshold = 20
+        self.zero_threshold = 20
+        self.zero_counter = 0
 
         # params for ShiTomasi corner detection
         self.feature_params = dict( maxCorners = 100,
@@ -194,49 +195,102 @@ class Project:
             return self.gesture_type[6]
 
 
-    def calcAbs(self, difvec):
+    def calcAbs(self, pre, cur):
+        difvec = np.array(cur) - np.array(pre)
         return np.sqrt(difvec[0]**2+difvec[1]**2)
 
 
     def kltTracker(self, current_frame, pre_frame):
         p1, st, err = cv2.calcOpticalFlowPyrLK(pre_frame.img, current_frame.img, np.array([[pre_frame.hand_position]]), None, **self.lk_params)
         p0_inv, st_inv, err_inv = cv2.calcOpticalFlowPyrLK(current_frame.img, pre_frame.img, p1, None, **self.lk_params)
-        dif = pre_frame.hand_position - p0_inv[0][0]
-        abs_dif = self.calcAbs(dif)
+        abs_dif = self.calcAbs(pre_frame.hand_position, p0_inv[0][0])
         if abs_dif > self.klt_threshold:
-            return np.array([0, 0])
+            return np.array([0., 0.], dtype=np.float32)
         else:
             return p1[0][0]
 
 
     def execute_klt(self, current_frame):
-        if self.pre_frame is not None:
-            if current_frame.hand_position[0] == 0 and current_frame.hand_position[1] == 0:
-                if self.pre_frame.hand_position[0] == 0 and self.pre_frame.hand_position[1] == 0:
-                    return np.array([0., 0.])
-                else:
-                    dif = current_frame.hand_position - self.pre_frame.hand_position
-                    abs_dif = self.calcAbs(dif)
-                    current_hand_position = self.kltTracker(current_frame, self.pre_frame)
-                    current_frame.update_hand_position(current_hand_position)
-                    print("\tcan't track hand by trt_pose_hand  ->  execute KLT tracker")
-                    print("\t(KLT) position: ", current_frame.hand_position, current_hand_position)
-                    return current_hand_position
+        """
+        if current_frame.hand_position[0] == 0 and current_frame.hand_position[1] == 0:
+            if self.pre_frame.hand_position[0] == 0 and self.pre_frame.hand_position[1] == 0:
+                return np.array([0., 0.], dtype=np.float32)
             else:
-                if not (self.pre_frame.hand_position[0] == 0 and self.pre_frame.hand_position[1] == 0):
-                    dif = current_frame.hand_position - self.pre_frame.hand_position
-                    abs_dif = self.calcAbs(dif)
-                    if abs_dif > self.dif_threshold:
-                        current_hand_position = self.kltTracker(current_frame, self.pre_frame)
-                        current_frame.update_hand_position(current_hand_position)
-                        print("\tabs(cur_pos - pre_pos) > threshold  ->  execute KLT tracker")
-                        print("\t(KLT) position: ", current_frame.hand_position, current_hand_position)
-                        return current_hand_position
-                    else:
-                        return current_frame.hand_position
+                dif = current_frame.hand_position - self.pre_frame.hand_position
+                abs_dif = self.calcAbs(self.pre_frame.hand_position, current_frame.hand_position)
+                current_hand_position = self.kltTracker(current_frame, self.pre_frame)
+                print("\tcan't track hand by trt_pose_hand  ->  execute KLT tracker")
+                print("\t(KLT) position: ", current_frame.hand_position, current_hand_position)
+                abs_dif = self.calcAbs(self.pre_frame.hand_position, current_hand_position)
+                if abs_dif > self.dif_threshold:
+                    current_frame.update_hand_position(self.pre_frame.hand_position)
+                    print("\tKLT tracking was bad -> pre frame hand position use")
+                    return self.pre_frame.hand_position
                 else:
-                    return current_frame.hand_position
+                    current_frame.update_hand_position(current_hand_position)
+                    print("\tKLT tracking was good -> KLT result use")
+                    return current_hand_position
         else:
+            if not (self.pre_frame.hand_position[0] == 0 and self.pre_frame.hand_position[1] == 0):
+                dif = current_frame.hand_position - self.pre_frame.hand_position
+                abs_dif = self.calcAbs(self.pre_frame.hand_position, current_frame.hand_position)
+                if abs_dif > self.dif_threshold:
+                    current_hand_position = self.kltTracker(current_frame, self.pre_frame)
+                    print("\ttrt pose estimate is bad  ->  execute KLT tracker")
+                    print("\t(KLT) position: ", current_frame.hand_position, current_hand_position)
+                    abs_dif = self.calcAbs(current_frame.hand_position, current_hand_position)
+                    if abs_dif > self.trt_klt_dif_threshold:
+                        print("\tKLT tracking was bad -> current frame hand position use")
+                        return current_frame.hand_position
+                    else:
+                        current_frame.update_hand_position(current_hand_position)
+                        print("\tKLT tracking was good -> KLT result use")
+                        return current_hand_position
+                else:
+                    print("\ttrt pose estimate is good")
+                    return current_frame.hand_position
+            else:
+                return current_frame.hand_position
+        """
+        if self.pre_frame.hand_position[0] == 0 and self.pre_frame.hand_position[1] == 0:
+            print("\thand position is [0., 0.] in pre frame")
+            return current_frame.hand_position
+        pre_cur_dif = self.calcAbs(self.pre_frame.hand_position, current_frame.hand_position)
+        if current_frame.hand_position[0] == 0 and current_frame.hand_position[1] == 0:
+            self.zero_counter += 1
+            if self.zero_counter > self.zero_threshold:
+                print("\tframes where hand position is zero are too many -> current frame hand position is [0., 0.]")
+                current_frame.update_hand_position(np.array([0., 0.], dtype=np.float32))
+                return np.array([0., 0.], dtype=np.float32)
+            else:
+                current_hand_position = self.kltTracker(current_frame, self.pre_frame)
+                print("\tcan't track hand by trt_pose_hand  ->  execute KLT tracker")
+                print("\t(KLT) position: ", current_hand_position)
+                abs_dif = self.calcAbs(self.pre_frame.hand_position, current_hand_position)
+                if abs_dif > self.dif_threshold:
+                    print("\tKLT tracking was bad -> current hand position = [0., 0.]")
+                    current_frame.update_hand_position(np.array([0., 0.], dtype=np.float32))
+                    return np.array([0., 0.], dtype=np.float32)
+                else:
+                    print("\tKLT tracking was good")
+                    current_frame.update_hand_position(current_hand_position)
+                    return current_hand_position
+        elif pre_cur_dif > self.dif_threshold:
+            self.zero_counter = 0
+            current_hand_position = self.kltTracker(current_frame, self.pre_frame)
+            print("\ttrt pose estimate is bad  ->  execute KLT tracker")
+            print("\t(KLT) position: ", current_hand_position)
+            pre_klt_dif = self.calcAbs(self.pre_frame.hand_position, current_hand_position)
+            if pre_klt_dif <= pre_cur_dif:
+                print("\tKLT tracing result is adapted")
+                current_frame.update_hand_position(current_hand_position)
+                return current_hand_position
+            else:
+                print("\ttrt pose estimate is adapted")
+                return current_frame.hand_position
+        else:
+            self.zero_counter = 0
+            print("\ttrt pose estimate is good")
             return current_frame.hand_position
 
 
@@ -250,6 +304,7 @@ class Project:
         # frameの作成
         current_frame = Frame(gray, current_hand_position, current_gesture)
         print("\nnew frame gesture: ", current_frame.gesture)
+        print("\t(pre frame) position: ", self.pre_frame.hand_position)
         print("\t(trt_hand_pose) position: ", current_frame.hand_position)
 
         # hand_poseが失敗していたらKLTtracker
