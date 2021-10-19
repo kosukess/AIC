@@ -15,7 +15,7 @@ import time
 
 """
 
-class mouse():
+class Mouse():
     def __init__(self):
 
         self.screenWidth, self.screenHeight = pyautogui.size()
