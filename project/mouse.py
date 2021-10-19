@@ -80,8 +80,6 @@ class mouse():
                 pyautogui.scroll(int(to_scroll),x=(mouse_position[0]*self.screenWidth)/256, y=(mouse_position[1]*self.screenHeight)/256)
         
         if gesture_name == "ok":
-            
-            
             pyautogui.keyDown('ctrl')
             if mouse_position!=[0,0]:
                 pyautogui.mouseUp(((mouse_position[0])*self.screenWidth)/256, ((mouse_position[1])*self.screenHeight)/256, button= 'left')
