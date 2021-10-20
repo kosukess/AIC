@@ -102,10 +102,12 @@ class Whiteboard():
             self.switch(cur_cursor, gesture_class)
 
 
-    def embed(self, upper_left, upper_right):
-        print()
+    def embed(self, upper_left, lower_right):
+        print("embed")
+        self.white_board[upper_left[1]:lower_right[1], upper_left[0]:lower_right[0]] = cv2.resize(self.white_board_magni, dsize=(lower_right[0]-upper_left[0], lower_right[1]-upper_left[1]))
 
     def zoomin(self, cur_cursor, gesture_class):
+        self.embed(self.upper_left, self.lower_right)
         if gesture_class == "pan": # gesture_classが"zoom in"なら
             if self.current_magni < self.max_magni:
                 if cur_cursor[0] == self.all_w and cur_cursor[1] == 0:
