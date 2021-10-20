@@ -60,7 +60,7 @@ class dataloader:
         WIDTH = 224
         HEIGHT = 224
         for filename in sorted(os.listdir(train_path)):
-            #print(filename)
+            print(filename)
             if filename == '.ipynb_checkpoints':
                 continue
             self.train_file_name.append(filename)
@@ -72,7 +72,7 @@ class dataloader:
             self.train_images.append(image)
      
         for filename in sorted(os.listdir(test_path)):
-            #print(filename)
+            print(filename)
             if filename == '.ipynb_checkpoints':
                 continue
             self.test_file_name.append(filename)
