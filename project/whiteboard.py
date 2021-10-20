@@ -29,6 +29,16 @@ class Whiteboard():
         self.draw_gesture = "draw"
         self.erase_gesture = "func"
         self.threshold = 40
+        
+        # zoom
+        self.least_width = 50
+        self.max_magni = self.w/self.least_width
+        self.current_magni = 1.
+        self.x_white_board = 0
+        self.y_white_board = 0
+        self.upper_left = (0, 0)
+        self.lower_right = (self.h, self.w)
+        self.white_board_magni = None # 追加
 
         # cursor
         self.cursor_color = (0,0,0)
@@ -92,6 +102,33 @@ class Whiteboard():
             self.switch(cur_cursor, gesture_class)
 
 
+    def embed(self, upper_left, upper_right):
+        print()
+
+    def zoomin(self, cur_cursor, gesture_class):
+        if gesture_class == "pan": # gesture_classが"zoom in"なら
+            if self.current_magni < self.max_magni:
+                if cur_cursor[0] == self.all_w and cur_cursor[1] == 0:
+                    # 倍率計算
+                    #while self.current_magni < self.max_magni:
+                    self.current_magni *= 1.01 # 倍率を1.01倍にする
+                    current_width = int(self.w/self.current_magni) # 1.01倍後の現在の幅
+                    current_height = int(self.h/self.current_magni) # 1.01倍後の現在の高さ
+
+                    # 拡大後のフレーム内での座標計算                        
+                    upper_left_x = int(cur_cursor[0] / 101) # 左上のx座標
+                    upper_left_y = int(cur_cursor[1] / 101) # 左上のy座標
+                    upper_left = np.array([upper_left_x, upper_left_y])
+                    lower_right_x = upper_left_x + current_width # 右下のx座標
+                    lower_right_y = upper_left_y + current_height # 右下のx座標
+                    lower_right = np.array([lower_right_x, lower_right_y])
+                    self.white_board_magni = self.white_board[int(upper_left_y):int(lower_right_y), int(upper_left_x):int(lower_right_x)]
+
+                    # 元画像内での座標計算
+                    self.upper_left += upper_left/self.current_magni # 元画像での左上の座標
+                    self.lower_right += lower_right/self.current_magni # 元画像での右下の座標
+
+
     def draw(self, cur_cursor, gesture_class):
         if cur_cursor[0] == self.all_w and cur_cursor[1] == 0:
             self.pre_cursor = None
@@ -129,6 +166,7 @@ class Whiteboard():
 
 
     def show_whiteboard(self, cursor):
+        self.white_board_magni = cv2.resize(self.white_board_magni, dsize=(self.w, self.h))
         cursor_white_board = self.white_board.copy()
         cursor_white_board = cv2.resize(cursor_white_board, dsize=(self.w, self.h))
         self.update_button(self.button_board)
