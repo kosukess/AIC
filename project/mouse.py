@@ -39,6 +39,11 @@ class Mouse():
         self.sock.bind(locaddr)
         print('create socket')
 
+    
+    def __del__(self):
+        self.sock.close()
+
+
     def receive_data(self):
         """
         message[0]: cursor data [0]: x, [1]: y
@@ -47,26 +52,27 @@ class Mouse():
         """        
         message, cli_addr = self.sock.recvfrom(self.M_SIZE)
         message = pickle.loads(message)
-        return message
+        return message[0], message[1]
+
 
     def control_cursor(self, mouse_position, gesture_name):
 
-        if self.pre_gesture!="stop":
+        if self.pre_gesture!="none":
             #pyautogui.position()
             self.fixed_x = mouse_position[0]
             self.fixed_y = mouse_position[1] 
 
-        if self.pre_gesture!="fist" and self.pre_gesture=="fist":
+        if self.pre_gesture!="func" and gesture_name=="func":
             pyautogui.mouseUp(((mouse_position[0])*self.screenWidth)/self.w, ((mouse_position[1])*self.screenHeight)/self.h, button= 'left')
             pyautogui.click()
 
-        if gesture_name == "stop":
+        if gesture_name == "none":
             if mouse_position!=[0,0]:
                 pyautogui.mouseUp(((mouse_position[0])*self.screenWidth)/self.w, ((mouse_position[1])*self.screenHeight)/self.h, button= 'left')
                 pyautogui.moveTo(((mouse_position[0])*self.screenWidth)/self.w, ((mouse_position[1])*self.screenHeight)/self.h)
 
 
-        if gesture_name == "peace":   
+        if gesture_name == "draw":   
             if mouse_position!=[0,0]:
                 pyautogui.mouseUp(((mouse_position[0])*self.screenWidth)/self.w, ((mouse_position[1])*self.screenHeight)/self.h, button= 'left')#to_scroll = (mouse_position[8][1]-mouse_position[0][1])/10
                 to_scroll = (self.p_sc-mouse_position[1])
@@ -95,7 +101,7 @@ class Mouse():
             pyautogui.keyUp('ctrl')
             
             
-        if gesture_name == "xxx":    
+        if gesture_name == "func" and self.pre_gesture == "func:    
             if mouse_position!=[0,0]:
                 pyautogui.mouseDown(((mouse_position[0])*self.screenWidth)/256, ((mouse_position[1])*self.screenHeight)/256, button= 'left')'''
         
