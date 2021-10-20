@@ -47,12 +47,12 @@ class Whiteboard():
         
         # button
         self.draw_state = True
+        self.pen_size = 1
+        self.max_pen_size = 50
         self.button_board = np.full([self.h, 80, 3], 255, np.uint8)
         self.init_button(self.button_board)
         self.button_blwh = np.full([self.h, self.all_w], 255, np.uint8)
         self.make_button_blwh(self.button_blwh)
-        self.pen_size = 1
-        self.max_pen_size = 50
 
         # udp
         self.M_SIZE = 1024
@@ -96,7 +96,10 @@ class Whiteboard():
     def execute_function(self, cur_cursor, gesture_class):
         if cur_cursor[0] < self.w:
             self.cursor_size = self.pen_size
-            self.draw(cur_cursor, gesture_class)
+            if gesture_class == self.draw_gesture:
+                self.draw(cur_cursor)
+            elif gesture_class == "zoom-in":
+                self.zoomin(cur_cursor)
         else:
             self.cursor_size = 2
             self.switch(cur_cursor, gesture_class)
@@ -108,32 +111,31 @@ class Whiteboard():
             cv2.resize(self.white_board_magni, dsize=(lower_right[0]-upper_left[0], lower_right[1]-upper_left[1]))
 
 
-    def zoomin(self, cur_cursor, gesture_class):
+    def zoomin(self, cur_cursor):
         self.embed(self.upper_left, self.lower_right)
-        if gesture_class == "zoom-in": # gesture_classが"zoom in"なら
-            if self.current_magni < self.max_magni:
-                if cur_cursor[0] == self.all_w and cur_cursor[1] == 0:
-                    # 倍率計算
-                    #while self.current_magni < self.max_magni:
-                    self.current_magni *= 1.01 # 倍率を1.01倍にする
-                    current_width = int(self.w/self.current_magni) # 1.01倍後の現在の幅
-                    current_height = int(self.h/self.current_magni) # 1.01倍後の現在の高さ
+        if self.current_magni < self.max_magni:
+            if cur_cursor[0] == self.all_w and cur_cursor[1] == 0:
+                # 倍率計算
+                #while self.current_magni < self.max_magni:
+                self.current_magni *= 1.01 # 倍率を1.01倍にする
+                current_width = int(self.w/self.current_magni) # 1.01倍後の現在の幅
+                current_height = int(self.h/self.current_magni) # 1.01倍後の現在の高さ
 
-                    # 拡大後のフレーム内での座標計算                        
-                    upper_left_x = int(cur_cursor[0] / 101) # 左上のx座標
-                    upper_left_y = int(cur_cursor[1] / 101) # 左上のy座標
-                    upper_left = np.array([upper_left_x, upper_left_y])
-                    lower_right_x = upper_left_x + current_width # 右下のx座標
-                    lower_right_y = upper_left_y + current_height # 右下のx座標
-                    lower_right = np.array([lower_right_x, lower_right_y])
-                    self.white_board_magni = self.white_board[int(upper_left_y):int(lower_right_y), int(upper_left_x):int(lower_right_x)]
+                # 拡大後のフレーム内での座標計算                        
+                upper_left_x = int(cur_cursor[0] / 101) # 左上のx座標
+                upper_left_y = int(cur_cursor[1] / 101) # 左上のy座標
+                upper_left = np.array([upper_left_x, upper_left_y])
+                lower_right_x = upper_left_x + current_width # 右下のx座標
+                lower_right_y = upper_left_y + current_height # 右下のx座標
+                lower_right = np.array([lower_right_x, lower_right_y])
+                self.white_board_magni = self.white_board[int(upper_left_y):int(lower_right_y), int(upper_left_x):int(lower_right_x)]
 
-                    # 元画像内での座標計算
-                    self.upper_left += upper_left/self.current_magni # 元画像での左上の座標
-                    self.lower_right += lower_right/self.current_magni # 元画像での右下の座標
+                # 元画像内での座標計算
+                self.upper_left += upper_left/self.current_magni # 元画像での左上の座標
+                self.lower_right += lower_right/self.current_magni # 元画像での右下の座標
 
 
-    def draw(self, cur_cursor, gesture_class):
+    def draw(self, cur_cursor):
         if cur_cursor[0] == self.all_w and cur_cursor[1] == 0:
             self.pre_cursor = None
 
@@ -143,11 +145,11 @@ class Whiteboard():
         elif self.calcAbs(cur_cursor - self.pre_cursor) > self.threshold:
             self.pre_cursor = None
 
-        elif gesture_class==self.draw_gesture and self.draw_state:
+        elif self.draw_state:
             cv2.line(self.white_board_magni,self.pre_cursor, cur_cursor, (0,0,0), int(self.pen_size))
             self.pre_cursor = cur_cursor
 
-        elif gesture_class==self.draw_gesture and not self.draw_state:
+        elif not self.draw_state:
             cv2.line(self.white_board_magni,self.pre_cursor, cur_cursor, (255,255,255), int(self.pen_size))
             self.pre_cursor = cur_cursor
    
