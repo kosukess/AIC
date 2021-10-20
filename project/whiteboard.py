@@ -38,7 +38,7 @@ class Whiteboard():
         self.y_white_board = 0
         self.upper_left = (0, 0)
         self.lower_right = (self.h, self.w)
-        self.white_board_magni = None # 追加
+        self.white_board_magni = self.white_board.copy() # 追加
 
         # cursor
         self.cursor_color = (0,0,0)
@@ -104,11 +104,13 @@ class Whiteboard():
 
     def embed(self, upper_left, lower_right):
         print("embed")
-        self.white_board[upper_left[1]:lower_right[1], upper_left[0]:lower_right[0]] = cv2.resize(self.white_board_magni, dsize=(lower_right[0]-upper_left[0], lower_right[1]-upper_left[1]))
+        self.white_board[upper_left[1]:lower_right[1], upper_left[0]:lower_right[0]] = \
+            cv2.resize(self.white_board_magni, dsize=(lower_right[0]-upper_left[0], lower_right[1]-upper_left[1]))
+
 
     def zoomin(self, cur_cursor, gesture_class):
         self.embed(self.upper_left, self.lower_right)
-        if gesture_class == "pan": # gesture_classが"zoom in"なら
+        if gesture_class == "zoom-in": # gesture_classが"zoom in"なら
             if self.current_magni < self.max_magni:
                 if cur_cursor[0] == self.all_w and cur_cursor[1] == 0:
                     # 倍率計算
@@ -142,11 +144,11 @@ class Whiteboard():
             self.pre_cursor = None
 
         elif gesture_class==self.draw_gesture and self.draw_state:
-            cv2.line(self.white_board,self.pre_cursor, cur_cursor, (0,0,0), int(self.pen_size))
+            cv2.line(self.white_board_magni,self.pre_cursor, cur_cursor, (0,0,0), int(self.pen_size))
             self.pre_cursor = cur_cursor
 
         elif gesture_class==self.draw_gesture and not self.draw_state:
-            cv2.line(self.white_board,self.pre_cursor, cur_cursor, (255,255,255), int(self.pen_size))
+            cv2.line(self.white_board_magni,self.pre_cursor, cur_cursor, (255,255,255), int(self.pen_size))
             self.pre_cursor = cur_cursor
    
 
@@ -168,9 +170,7 @@ class Whiteboard():
 
 
     def show_whiteboard(self, cursor):
-        self.white_board_magni = cv2.resize(self.white_board_magni, dsize=(self.w, self.h))
-        cursor_white_board = self.white_board.copy()
-        cursor_white_board = cv2.resize(cursor_white_board, dsize=(self.w, self.h))
+        cursor_white_board = cv2.resize(self.white_board_magni, dsize=(self.w, self.h))
         self.update_button(self.button_board)
         show_img = cv2.hconcat([cursor_white_board, self.button_board])
         cv2.circle(show_img, cursor, int(self.cursor_size), self.cursor_color, 2)
