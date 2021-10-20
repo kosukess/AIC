@@ -1,9 +1,3 @@
-#マウスの位置とジェスチャークラスを受け取る
-#マウス位置＝mouse_position
-#ジェスチャークラス=gesture_class
-#受け取ったもので描く・消す・スイッチ
-#描画したホワイトボードの表示
-
 import numpy as np
 import cv2
 import socket
@@ -82,29 +76,15 @@ class Mouse():
                     to_scroll = -1
                 pyautogui.scroll(int(to_scroll),x=(mouse_position[0]*self.screenWidth)/self.w, y=(mouse_position[1]*self.screenHeight)/self.h)
         
-        #zoomインアウトは出来れば実装, cursor_controll_live_demo.ipynbがなぜ256で割ってるのか不明
-        '''if gesture_name == "ok":
-            pyautogui.keyDown('ctrl')
+        if self.pre_gesture!="zoom-in" and gesture_name == "zoom-in":
             if mouse_position!=[0,0]:
-                pyautogui.mouseUp(((mouse_position[0])*self.screenWidth)/256, ((mouse_position[1])*self.screenHeight)/256, button= 'left')
-                
-                to_scroll = (self.p_sc-mouse_position[1])
-                if to_scroll>0:
-                    to_scroll = 1
-                else:
-                    to_scroll = -1
-                t1 = time.time()
-                #print(t1-t0)
-                if t1-self.t0>1:   
-                    pyautogui.scroll(int(to_scroll),x=(mouse_position[0]*self.screenWidth)/256, y=(mouse_position[1]*self.screenHeight)/256)
-                    self.t0 = time.time()
-            pyautogui.keyUp('ctrl')
+                pyautogui.hotkey('ctrl','+')
             
             
-        if gesture_name == "func" and self.pre_gesture == "func:    
+        if self.pre_gesture!="zoom-out" and gesture_name == "zoom-out":
             if mouse_position!=[0,0]:
-                pyautogui.mouseDown(((mouse_position[0])*self.screenWidth)/256, ((mouse_position[1])*self.screenHeight)/256, button= 'left')'''
-        
+                pyautogui.hotkey('ctrl','-')
+            
         self.pre_gesture = gesture_name
         self.p_sc = mouse_position[1]   
         
