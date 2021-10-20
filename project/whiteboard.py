@@ -103,7 +103,7 @@ class Whiteboard():
 
     def embed(self, upper_left, lower_right):
         self.white_board[upper_left[1]:lower_right[1], upper_left[0]:lower_right[0]] = \
-            cv2.resize(self.white_board_magni, dsize=(lower_right[0]-upper_left[0], lower_right[1]-upper_left[1]))
+            cv2.resize(self.white_board_magni, dsize=(int(lower_right[0]-upper_left[0]), int(lower_right[1]-upper_left[1])))
 
 
     def zoomin(self, cur_cursor):
@@ -127,6 +127,32 @@ class Whiteboard():
                 # 元画像内での座標計算
                 self.upper_left += upper_left/self.current_magni # 元画像での左上の座標
                 self.lower_right += lower_right/self.current_magni # 元画像での右下の座標
+    
+    def zoomout(self, cur_cursor, gesture_class):
+        self.embed(self.upper_left, self.lower_right)
+        if self.current_magni > 1:
+            if not (cur_cursor[0] == self.all_w and cur_cursor[1] == 0):
+                # 倍率計算
+                self.current_magni /= 1.01 # 倍率を/1.01にする
+                current_width = int(self.w*self.current_magni) # /1.01後の幅
+                current_height = int(self.h*self.current_magni) # 1.01後の高さ
+
+                # 縮小後のフレーム内での(現在のフレームに対する)座標計算
+                x_difference = int(cur_cursor[0] * 0.01) / self.current_magni  
+                y_difference = int(cur_cursor[1] * 0.01) / self.current_magni                   
+                # upper_left_x = int(cur_cursor[0] * 0.01) / self.current_magni()# 左上のx座標
+                # upper_left_y = int(cur_cursor[1] * 0.01) / self.current_magni() # 左上のy座標
+                # upper_left = np.array([upper_left_x, upper_left_y])
+                # lower_right_x = upper_left_x + current_width # 右下のx座標
+                # lower_right_y = upper_left_y + current_height # 右下のx座標
+                # lower_right = np.array([lower_right_x, lower_right_y])
+
+                # 元画像内での座標計算
+                self.upper_left[0] -= x_difference # 元画像での左上の座標
+                self.upper_left[1] -= y_difference
+                self.lower_right[0] += current_width # 元画像での右下の座標
+                self.lower_right[1] += current_height
+                self.white_board_magni = self.white_board[int(self.upper_left[1]):int(self.lower_right[1]), int(self.upper_left[0]):int(self.lower_right[0])]
 
 
     def draw(self, cur_cursor):
