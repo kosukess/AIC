@@ -48,43 +48,77 @@ class Mouse():
         message = pickle.loads(message)
         return message[0], message[1]
 
+    def cursor_process(self, mouse_position):
+        cur_cursor = np.array([mouse_position[0]*(self.screenWidth/self.w), mouse_position[1]*(self.screenHeight/self.h)]).astype(np.int32)
+        if cur_cursor[0] >= self.screenWidth:
+            cur_cursor[0] = self.screenWidth - 1
+        if cur_cursor[1] >= self.screenHeight:
+            cur_cursor[1] = self.screenHeight - 1
+          
+        return cur_cursor
 
-    def control_cursor(self, mouse_position, gesture_name):
-
-        if self.pre_gesture!="none":
-            #pyautogui.position()
-            self.fixed_x = mouse_position[0]
-            self.fixed_y = mouse_position[1] 
+    def control_cursor(self, cur_cursor, gesture_name):
+        """if self.pre_gesture!="none":
+            if not (cur_cursor[0] == self.screenWidth-1 and cur_cursor[1] == 0):
+                print("1")
+                self.fixed_x = cur_cursor[0]
+                self.fixed_y = cur_cursor[1] """
 
         if self.pre_gesture!="func" and gesture_name=="func":
-            pyautogui.mouseUp(((mouse_position[0])*self.screenWidth)/self.w, ((mouse_position[1])*self.screenHeight)/self.h, button= 'left')
-            pyautogui.click()
+            if not (cur_cursor[0] == self.screenWidth-1 and cur_cursor[1] == 0):
+                print("click: ", cur_cursor)
+                pyautogui.mouseUp(cur_cursor[0], cur_cursor[1], button= 'left')
+                pyautogui.click()
+            else:
+                print("zero position")
 
-        if gesture_name == "none":
-            if mouse_position!=[0,0]:
-                pyautogui.mouseUp(((mouse_position[0])*self.screenWidth)/self.w, ((mouse_position[1])*self.screenHeight)/self.h, button= 'left')
-                pyautogui.moveTo(((mouse_position[0])*self.screenWidth)/self.w, ((mouse_position[1])*self.screenHeight)/self.h)
+        elif gesture_name == "none":
+            if not (cur_cursor[0] == self.screenWidth-1 and cur_cursor[1] == 0):
+                print("move: ", cur_cursor)
+                pyautogui.mouseUp(cur_cursor[0], cur_cursor[1], button= 'left')
+                pyautogui.moveTo(self.fixed_x, self.fixed_y)
+            else:
+                print("zero position")
 
-
-        if gesture_name == "draw":   
-            if mouse_position!=[0,0]:
-                pyautogui.mouseUp(((mouse_position[0])*self.screenWidth)/self.w, ((mouse_position[1])*self.screenHeight)/self.h, button= 'left')#to_scroll = (mouse_position[8][1]-mouse_position[0][1])/10
-                to_scroll = (self.p_sc-mouse_position[1])
+        elif gesture_name == "draw":   
+            if not (cur_cursor[0] == self.screenWidth-1 and cur_cursor[1] == 0):
+                print("scroll: ", cur_cursor)
+                pyautogui.mouseUp(cur_cursor[0], cur_cursor[1], button= 'left')
+                to_scroll = (self.p_sc-self.fixed_y   )#to_scroll = (mouse_position[8][1]-mouse_position[0][1])/10
                 if to_scroll>0:
                     to_scroll = 1
                 else:
                     to_scroll = -1
-                pyautogui.scroll(int(to_scroll),x=(mouse_position[0]*self.screenWidth)/self.w, y=(mouse_position[1]*self.screenHeight)/self.h)
+                pyautogui.scroll(int(to_scroll),x=self.fixed_x, y=self.fixed_y)
+            else:
+                print("zero position")
         
-        if self.pre_gesture!="zoom-in" and gesture_name == "zoom-in":
-            if mouse_position!=[0,0]:
+        elif self.pre_gesture!="zoom-in" and gesture_name == "zoom-in":
+            if not (cur_cursor[0] == self.screenWidth-1 and cur_cursor[1] == 0):
+                print("zoom in: ", cur_cursor)
+                pyautogui.mouseUp(cur_cursor[0], cur_cursor[1], button= 'left')
                 pyautogui.hotkey('ctrl','+')
+            else:
+                print("zero position")
             
-            
-        if self.pre_gesture!="zoom-out" and gesture_name == "zoom-out":
-            if mouse_position!=[0,0]:
+        elif self.pre_gesture!="zoom-out" and gesture_name == "zoom-out":
+            if not (cur_cursor[0] == self.screenWidth-1 and cur_cursor[1] == 0):
+                print("zoom out: ", cur_cursor)
+                pyautogui.mouseUp(cur_cursor[0], cur_cursor[1], button= 'left')
                 pyautogui.hotkey('ctrl','-')
+            else:
+                print("zero position")
+
+        elif self.pre_gesture=="func" and gesture_name=="func":
+            if not (cur_cursor[0] == self.screenWidth-1 and cur_cursor[1] == 0):
+                print("drag: ", cur_cursor)
+                pyautogui.mouseDown(cur_cursor[0], cur_cursor[1], button= 'left')
+            else:
+                print("zero position")
+
+        else:
+            print("No function: ", cur_cursor)
             
         self.pre_gesture = gesture_name
-        self.p_sc = mouse_position[1]   
+        self.p_sc = cur_cursor[1]
         

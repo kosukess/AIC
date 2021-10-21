@@ -2,6 +2,10 @@
 #マウス位置＝mouse_position
 #ジェスチャークラス=gesture_class
 #受け取ったもので描く・消す・スイッチ
+#描画したホワイトボードの表示#マウスの位置とジェスチャークラスを受け取る
+#マウス位置＝mouse_position
+#ジェスチャークラス=gesture_class
+#受け取ったもので描く・消す・スイッチ
 #描画したホワイトボードの表示
 
 import numpy as np
@@ -27,7 +31,7 @@ class Whiteboard():
         self.threshold = 40
         
         # zoom
-        self.least_width = 100
+        self.least_width = 200
         self.max_magni = self.w/self.least_width
         self.current_magni = 1.
         self.upper_left = (0, 0)
@@ -35,6 +39,9 @@ class Whiteboard():
         self.white_board_magni = self.white_board.copy()
         self.zoom_in_magni = 1.01
         self.zoom_out_magni = 0.99
+        self.zoom_where_threshold = 150
+        self.zoom_count_threshold = 1
+        self.zoom_counter = 0
 
         # cursor
         self.cursor_color = (0,0,0)
@@ -80,7 +87,7 @@ class Whiteboard():
 
 
     def cursor_process(self, mouse_position):
-        cur_cursor = np.array([int(mouse_position[0]*(self.all_w/224)), int(mouse_position[1]*(self.h/244))])
+        cur_cursor = np.array([int(mouse_position[0]*(self.all_w/224)), int(mouse_position[1]*(self.h/224))])
         if cur_cursor[0] >= self.all_w:
             cur_cursor[0] = self.all_w - 1
         if cur_cursor[1] >= self.h:
@@ -96,67 +103,70 @@ class Whiteboard():
                 self.draw(cur_cursor)
             elif gesture_class == "zoom-in":
                 self.zoomin(cur_cursor)
+            elif gesture_class == "zoom-out":
+                self.zoomout(cur_cursor)
         else:
             self.cursor_size = 2
             self.switch(cur_cursor, gesture_class)
 
 
     def embed(self, upper_left, lower_right):
-        self.white_board[upper_left[1]:lower_right[1], upper_left[0]:lower_right[0]] = \
-            cv2.resize(self.white_board_magni, dsize=(int(lower_right[0]-upper_left[0]), int(lower_right[1]-upper_left[1])))
+        resize_magni = cv2.resize(self.white_board_magni, dsize=(lower_right[0]-upper_left[0], lower_right[1]-upper_left[1]))
+        self.white_board[upper_left[1]:lower_right[1], upper_left[0]:lower_right[0]] = resize_magni
+        if self.zoom_counter == self.zoom_count_threshold:
+            self.zoom_counter = 0
+            self.white_board = np.where(self.white_board<self.zoom_where_threshold, 0, 255).astype(np.uint8)
 
 
     def zoomin(self, cur_cursor):
+        self.pre_cursor = cur_cursor
         self.embed(self.upper_left, self.lower_right)
         if self.current_magni < self.max_magni:
-            if not (cur_cursor[0] == self.all_w and cur_cursor[1] == 0):
-                # 倍率計算、元画像での大きさ
-                self.current_magni *= self.zoom_in_magni # 倍率を1.01倍にする
-                current_width = int(self.w/self.zoom_in_magni) # 1.01倍後の現在の幅
-                current_height = int(self.h/self.zoom_in_magni) # 1.01倍後の現在の高さ
-
+            if not (cur_cursor[0] == self.all_w-1 and cur_cursor[1] == 0):
+                self.zoom_counter += 1
                 # 拡大後のフレーム内での座標計算                        
-                upper_left_x = int(cur_cursor[0] / 101) # 左上のx座標
-                upper_left_y = int(cur_cursor[1] / 101) # 左上のy座標
+                upper_left_x = int(cur_cursor[0] / (self.zoom_in_magni * 100)) # 左上のx座標
+                upper_left_y = int(cur_cursor[1] / (self.zoom_in_magni * 100)) # 左上のy座標
                 upper_left = np.array([upper_left_x, upper_left_y])
-                lower_right_x = upper_left_x + current_width # 右下のx座標
-                lower_right_y = upper_left_y + current_height # 右下のy座標
-                lower_right = np.array([lower_right_x, lower_right_y])
-                self.white_board_magni = self.white_board[int(upper_left_y):int(lower_right_y), int(upper_left_x):int(lower_right_x)]
 
                 # 元画像内での座標計算
-                self.upper_left += upper_left/self.current_magni # 元画像での左上の座標
-                self.lower_right += lower_right/self.current_magni # 元画像での右下の座標
-    
-    def zoomout(self, cur_cursor, gesture_class):
-        self.embed(self.upper_left, self.lower_right)
-        if self.current_magni > 1:
-            if not (cur_cursor[0] == self.all_w and cur_cursor[1] == 0):
-                # 倍率計算
-                self.current_magni /= 1.01 # 倍率を/1.01にする
-                current_width = int(self.w*self.current_magni) # /1.01後の幅
-                current_height = int(self.h*self.current_magni) # 1.01後の高さ
-
-                # 縮小後のフレーム内での(現在のフレームに対する)座標計算
-                x_difference = int(cur_cursor[0] * 0.01) / self.current_magni  
-                y_difference = int(cur_cursor[1] * 0.01) / self.current_magni                   
-                # upper_left_x = int(cur_cursor[0] * 0.01) / self.current_magni()# 左上のx座標
-                # upper_left_y = int(cur_cursor[1] * 0.01) / self.current_magni() # 左上のy座標
-                # upper_left = np.array([upper_left_x, upper_left_y])
-                # lower_right_x = upper_left_x + current_width # 右下のx座標
-                # lower_right_y = upper_left_y + current_height # 右下のx座標
-                # lower_right = np.array([lower_right_x, lower_right_y])
-
-                # 元画像内での座標計算
-                self.upper_left[0] -= x_difference # 元画像での左上の座標
-                self.upper_left[1] -= y_difference
-                self.lower_right[0] += current_width # 元画像での右下の座標
-                self.lower_right[1] += current_height
+                self.upper_left += (upper_left/self.current_magni).astype(np.int32) # 元画像での左上の座標
+                self.current_magni *= self.zoom_in_magni # 倍率を1.01倍にする
+                actual_board = np.array([self.w/self.current_magni, self.h/self.current_magni]).astype(np.int32)
+                self.lower_right = self.upper_left + actual_board # 元画像での右下の座標
+                if self.lower_right[0] > self.w:
+                    self.lower_right[0] = self.w
+                if self.lower_right[1] > self.h:
+                    self.lower_right[1] = self.h
                 self.white_board_magni = self.white_board[int(self.upper_left[1]):int(self.lower_right[1]), int(self.upper_left[0]):int(self.lower_right[0])]
 
 
+    def zoomout(self, cur_cursor):
+        self.pre_cursor = cur_cursor
+        self.embed(self.upper_left, self.lower_right)
+        if self.current_magni > 1:
+            if not (cur_cursor[0] == self.all_w-1 and cur_cursor[1] == 0):    
+                self.zoom_counter += 1                
+                # 元画像内での座標計算
+                self.upper_left -= (cur_cursor / (self.zoom_out_magni * 100) / self.current_magni).astype(np.int32)
+                if self.upper_left[0] < 0:
+                    self.upper_left[0] = 0
+                if self.upper_left[1] < 0:
+                    self.upper_left[1] = 0
+                # self.upper_left += (upper_left/self.current_magni).astype(np.int32) # 元画像での左上の座標
+                self.current_magni *= self.zoom_out_magni # 倍率を0.99倍にする
+                actual_board = np.array([self.w/self.current_magni, self.h/self.current_magni]).astype(np.int32)
+                self.lower_right = self.upper_left + actual_board # 元画像での右下の座標
+                if self.lower_right[0] > self.w:
+                    self.lower_right[0] = self.w
+                if self.lower_right[1] > self.h:
+                    self.lower_right[1] = self.h
+                self.white_board_magni = self.white_board[int(self.upper_left[1]):int(self.lower_right[1]), int(self.upper_left[0]):int(self.lower_right[0])]
+                #print("zoomout, cut: ", self.white_board_magni.shape)
+
+
     def draw(self, cur_cursor):
-        if cur_cursor[0] == self.all_w and cur_cursor[1] == 0:
+        if cur_cursor[0] == self.all_w-1 and cur_cursor[1] == 0:
             self.pre_cursor = None
 
         if self.pre_cursor is None:
@@ -166,11 +176,11 @@ class Whiteboard():
             self.pre_cursor = None
 
         elif self.draw_state:
-            cv2.line(self.white_board_magni,self.pre_cursor, cur_cursor, (0,0,0), int(self.pen_size))
+            cv2.line(self.white_board_magni, tuple(self.pre_cursor), tuple(cur_cursor), (0,0,0), int(self.pen_size))
             self.pre_cursor = cur_cursor
 
         elif not self.draw_state:
-            cv2.line(self.white_board_magni,self.pre_cursor, cur_cursor, (255,255,255), int(self.pen_size))
+            cv2.line(self.white_board_magni, tuple(self.pre_cursor), tuple(cur_cursor), (255,255,255), int(self.pen_size))
             self.pre_cursor = cur_cursor
    
 
@@ -192,17 +202,16 @@ class Whiteboard():
 
 
     def show_whiteboard(self, cursor):
-        cursor_white_board = cv2.resize(self.white_board_magni, dsize=(self.w, self.h))
+        self.white_board_magni = cv2.resize(self.white_board_magni, dsize=(self.w, self.h))
         self.update_button(self.button_board)
-        show_img = cv2.hconcat([cursor_white_board, self.button_board])
-        cv2.circle(show_img, cursor, int(self.cursor_size), self.cursor_color, 2)
+        show_img = cv2.hconcat([self.white_board_magni, self.button_board])
+        cv2.circle(show_img, tuple(cursor), int(self.cursor_size), self.cursor_color, 2)
         cv2.imshow('white board (Push \"Q\" to quit)', show_img)       
         key = cv2.waitKey(1)
         return key
 
     
-    def loop_finish_process(self, cursor, gesture):
-        self.pre_cursor = cursor
+    def loop_finish_process(self, gesture):
         self.pre_gesture = gesture
 
         
