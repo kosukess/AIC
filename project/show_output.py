@@ -13,7 +13,7 @@ def main():
         cursor = wb.cursor_process(cursor_data)
         wb.execute_function(cursor, gesture)
         key = wb.show_whiteboard(cursor)
-        wb.loop_finish_process(cursor, gesture)
+        wb.loop_finish_process(gesture)
         if  key == ord('q'):
             wb.sock.close()
             break

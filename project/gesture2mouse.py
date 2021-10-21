@@ -2,6 +2,7 @@
 # execute in Windows
 from mouse import Mouse
 import sys
+import time
 import signal
 import msvcrt
 
@@ -16,7 +17,9 @@ def main():
             if kb.decode() == 'q':
                 break
         hand_position, gesture = ms.receive_data()
-        ms.control_cursor(hand_position, gesture)
+        cur_cursor = ms.cursor_process(hand_position)
+        ms.control_cursor(cur_cursor, gesture)
+        time.sleep(0.03)
 
     ms.sock.close()
 
