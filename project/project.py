@@ -63,7 +63,7 @@ class Project:
         # classify
         self.clf = make_pipeline(StandardScaler(), SVC(gamma='auto', kernel='rbf'))
         self.preprocessdata = preprocessdata(topology, self.num_parts)
-        filename = 'svmmodel_new.sav'
+        filename = 'svmmodel_ours1.sav'
         self.clf = pickle.load(open(filename, 'rb'))
         with open('preprocess/gesture.json', 'r') as f:
             gesture = json.load(f)
