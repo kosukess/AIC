@@ -38,4 +38,7 @@ After you start the docker container with required libraries, you can run:
 cd project
 python3 main.py
 ```
-`main.py` estimates your hand position and gesture class. 
+`main.py` estimates your hand position and gesture class, and send them to our computer.<br>
+
+### our computer
+Run `dist/show_output.exe`.
