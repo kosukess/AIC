@@ -1,8 +1,10 @@
 # Drawing tool by hand gestures
 The project made by `Team A : KEIO University Project by KEIO University (KEIO AIC) x NVIDIA collaboration`<br>
-We implemented a drawing tool by hand gestures. We use TRT Pose Hand to detect hand poses. <br>
-The project includes
-- drawing tool which runs in your PC connecting your Jetson nano
+We implemented a drawing tool by hand gestures. In this application, Jetson estimates hand poses, then classifies hand gestures from the hand poses.
+We use [TRT Pose Hand](https://github.com/NVIDIA-AI-IOT/trt_pose_hand) to estimate hand poses. TRT Pose Hand is a deep learning model of hand pose estimation which can work at 15 ~ 20 FPS on Jetson Nano 2GB model.
+To classify hand gestures we use a SVM model which is the same codes as TRT Pose Hand. However, to classify more precisely we train the SVM model from scratch.
+We use 6000 images (1200 images for each 5 classes) for train dataset. The model was able to classify hand poses with 95% accuracy in our environment.
+Lastly, we use KLT feature tracker to draw smoother lines. TRT Pose Hand estimates hand poses from an image not a movie. That's why it sometimes drew angular lines because it didn't consider the relation between the previous image and the current image. KLT feature tracker, which is one of the image processing technology, can find points in the current image corresponding to the points in the previous image. 
 
 ## Working Example
 <center>
