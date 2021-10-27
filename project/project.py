@@ -76,12 +76,12 @@ class Project:
 
         # hand tracking
         self.pre_frame = Frame(None, np.array([0.,0.], dtype=np.float32), None)
-        self.cursor_fist_joint = 5
-        self.cursor_stop_joint = 5
-        self.dif_threshold = 3
+        self.cursor_fist_joint = 7
+        self.cursor_stop_joint = 7
+        self.dif_threshold = 5
         self.num_frames = 4
         self.klt_threshold = 20
-        self.cur_klt_threshold = 10
+        self.cur_klt_threshold = 20
         self.zero_threshold = 20
         self.zero_counter = 0
 
