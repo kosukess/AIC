@@ -7,16 +7,16 @@ The project includes
 ## Function of this drawing tool
 
 <center>
-<table>
+<table align="center" border="1">
 <tr>
-<td><img src="images/pen_app.gif" alt="Pen" width="300" border="1"></td>
-<td><img src="images/eraser_app.gif" alt="Eraser" width="300" border="1"></td>
-<td><img src="images/zoom_app.gif" alt="Zoom" width="300" border="1"></td>
+<td><img src="images/pen_app.gif" alt="Pen" width="300"></td>
+<td><img src="images/eraser_app.gif" alt="Eraser" width="300"></td>
+<td><img src="images/zoom_app.gif" alt="Zoom" width="300"></td>
 </tr>
 <tr>
-<td><center>Pen</center></td>
-<td><center>Eraser</center></td>
-<td><center>Zoom</center></td>
+<td>Pen</td>
+<td>Eraser</td>
+<td>Zoom</td>
 </tr>
 </table>
 </center>
