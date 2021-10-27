@@ -28,7 +28,7 @@ class Whiteboard():
         self.white_board = np.full([self.h, self.w, 3], 255, np.uint8)
         self.draw_gesture = "draw"
         self.erase_gesture = "func"
-        self.threshold = 40
+        self.threshold = 20
         
         # zoom
         self.least_width = 200
