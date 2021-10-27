@@ -4,6 +4,22 @@ We implemented a drawing tool by hand gestures. We use TRT Pose Hand to detect h
 The project includes
 - drawing tool which runs in your PC connecting your Jetson nano
 
+## Working Example
+<center>
+<table align="center" border="1">
+<tr>
+<td><img src="images/pen_app.gif" alt="Pen" width="300"></td>
+<td><img src="images/eraser_app.gif" alt="Eraser" width="300"></td>
+<td><img src="images/zoom_app.gif" alt="Zoom" width="300"></td>
+</tr>
+<tr>
+<td>Pen and change size</td>
+<td>Eraser</td>
+<td>Zoom</td>
+</tr>
+</table>
+</center>
+<br>
 
 ## Requirement
 - jetpack 4.5.1 for 2GB ( https://developer.nvidia.com/jetpack-sdk-451-archive )
@@ -57,26 +73,9 @@ After your PC receives data from Jetson, a whiteboard which you can draw shows o
 <img src="images/gesture.png" alt="Gesture" width="900" border="1">
 </center>
 <br>
+
 1. None
 1. Draw or Erase
 1. change mode (pen or eraser) and choose size
 1. zoom in
 1. zoom out
-
-
-## Working Example
-<center>
-<table align="center" border="1">
-<tr>
-<td><img src="images/pen_app.gif" alt="Pen" width="300"></td>
-<td><img src="images/eraser_app.gif" alt="Eraser" width="300"></td>
-<td><img src="images/zoom_app.gif" alt="Zoom" width="300"></td>
-</tr>
-<tr>
-<td>Pen and change size</td>
-<td>Eraser</td>
-<td>Zoom</td>
-</tr>
-</table>
-</center>
-<br>
