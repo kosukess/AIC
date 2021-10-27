@@ -5,16 +5,27 @@ The project includes
 - drawing tool which runs in our PC connecting your Jetson nano
 
 ## Function of this drawing tool
+
+- Pen
 <center> 
 <img src="images/pen.gif"
 alt="Pen" width="1000" border="1" />
+</center>
 <br>
+
+- Eraser
+<center>
 <img src="images/eraser.gif"
 alt="Eraser" width="1000" border="1" />
+</center>
 <br>
+
+- Zoom
+<center>
 <img src="images/zoom.gif"
 alt="Zoom" width="1000" border="1" />
 </center>
+
 
 ## Getting started
 ### Requirement
