@@ -64,7 +64,7 @@ class Whiteboard():
         localddr = (host, port)
         self.sock = socket.socket(socket.AF_INET, type=socket.SOCK_DGRAM)
         self.sock.bind(localddr)
-        print('create socket')
+        print('wait for data from Jetson')
 
     
     def __del__(self):
