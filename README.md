@@ -21,6 +21,18 @@ The project includes
 </center>
 <br>
 
+## Gesture
+<center>
+<img src="images/gesture.png" alt="Gesture" width="900" border="1">
+</center>
+<br>
+
+1. None
+1. Draw or Erase
+1. change mode (pen or eraser) and choose size
+1. zoom in
+1. zoom out
+
 ## Requirement
 - jetpack 4.5.1 for 2GB ( https://developer.nvidia.com/jetpack-sdk-451-archive )
 - Jetson nano 2GB model (can work with any Jetson devices but we did not check)
@@ -67,15 +79,3 @@ Jetson begins sending data to your PC about 3 minutes after you execute `python3
 ### your PC
 Run `client_computer/show_output.exe`.<br>
 After your PC receives data from Jetson, a whiteboard which you can draw shows on your PC.
-
-## Gesture
-<center>
-<img src="images/gesture.png" alt="Gesture" width="900" border="1">
-</center>
-<br>
-
-1. None
-1. Draw or Erase
-1. change mode (pen or eraser) and choose size
-1. zoom in
-1. zoom out
