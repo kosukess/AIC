@@ -60,4 +60,4 @@ python3 main.py
 `main.py` estimates your hand position and gesture class, and send them to our computer.<br>
 
 ### our computer
-Run `dist/show_output.exe`.
+Run `client_computer/show_output.exe`.
