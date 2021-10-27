@@ -1,5 +1,8 @@
 # Drawing tool by hand gestures
 We implement a drawing tool by our hand gestures. We use TRT Pose Hand to detect our hand pose. <br>
+The project made by
+- Team A : KEIO University Project by KEIO University (KEIO AIC) x NVIDIA collaboration
+
 The project includes
 - drawing tool which is run in our PC 
 
